@@ -79,11 +79,19 @@ class ProduksiController extends Controller
     {
         $search = $request->input('search', '');
         $paginate = $request->input('paginate', 10);
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
 
         $transaksi = Transaksi::with('transaksiDetail')
             ->where('jenis_transaksi', 'produksi')
             ->where('status', 'aktif')
             ->orderBy('created_at', 'desc')
+            ->when($search, function ($query, $search) {
+                return $query->where('kode_transaksi', 'like', '%' . $search . '%');
+            })
+            ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
+                return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            })
             ->paginate($paginate);
 
         return view('list.produksi_list', compact('transaksi'));

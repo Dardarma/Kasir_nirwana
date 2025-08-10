@@ -48,12 +48,12 @@
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h3 class="card-title mb-0">
                         Data Transaksi Pemakaian
                     </h3>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
                         <form method="GET" action="{{ url('/pemakaian/list') }}" class="d-flex align-items-center gap-2">
@@ -65,6 +65,13 @@
                                     <option value="50" {{ request('paginate') == 50 ? 'selected' : '' }}>50</option>
                                     <option value="100" {{ request('paginate') == 100 ? 'selected' : '' }}>100</option>
                                 </select>
+                            </div>
+
+                            {{-- filter date range --}}
+                            <div class="input-group input-group-sm mx-1" style="width: 220px;">
+                                <input type="date" name="tanggal_dari" class="form-control" placeholder="Dari tanggal" value="{{ request('tanggal_dari') }}">
+                                <span class="mx-1">s/d</span>
+                                <input type="date" name="tanggal_sampai" class="form-control" placeholder="Sampai tanggal" value="{{ request('tanggal_sampai') }}">
                             </div>
                             
                             <!-- Search -->
@@ -81,7 +88,6 @@
                         
                         <!-- Add Button -->
                         <a href="{{ url('/pemakaian') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus mr-1"></i>
                             Transaksi Baru
                         </a>
                     </div>
@@ -97,8 +103,8 @@
                         <thead style="background-color: #578FCA; color: white;">
                             <tr>
                                 <th style="min-width: 60px; white-space: nowrap;">No</th>
-                                <th style="min-width: 150px; white-space: nowrap;">Tanggal</th>
                                 <th style="min-width: 150px; white-space: nowrap;">Kode Transaksi</th>
+                                <th style="min-width: 150px; white-space: nowrap;">Tanggal</th>
                                 <th style="min-width: 120px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
@@ -111,8 +117,8 @@
                             @foreach ($transaksi as $key => $item)
                                 <tr>
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
-                                    <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                                     <td style="white-space: nowrap;">{{ $item->kode_transaksi }}</td>
+                                    <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                                     <td style="white-space: nowrap;">
                                         <a class="btn btn-info btn-sm btn-detail" data-toggle="modal" data-target="#detail"
                                             data-id="{{ $item->id }}"><small>Detail</small></a>

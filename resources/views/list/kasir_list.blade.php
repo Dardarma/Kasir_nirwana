@@ -47,23 +47,31 @@
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h3 class="card-title mb-0">
                         Data Transaksi Kasir
                     </h3>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
                         <form method="GET" action="{{ url('/kasir/list') }}" class="d-flex align-items-center gap-2">
+
                             <!-- Show entries -->
-                            <div class="input-group input-group-sm" style="width: 80px;">
+                            <div class="input-group input-group-sm mx-1" style="width: 80px;">
                                 <select class="custom-select" name="paginate" onchange="this.form.submit()">
                                     <option value="10" {{ request('paginate') == 10 ? 'selected' : '' }}>10</option>
                                     <option value="25" {{ request('paginate') == 25 ? 'selected' : '' }}>25</option>
                                     <option value="50" {{ request('paginate') == 50 ? 'selected' : '' }}>50</option>
                                     <option value="100" {{ request('paginate') == 100 ? 'selected' : '' }}>100</option>
                                 </select>
+                            </div>
+
+                            {{-- filter date range --}}
+                            <div class="input-group input-group-sm mx-1" style="width: 220px;">
+                                <input type="date" name="tanggal_dari" class="form-control" placeholder="Dari tanggal" value="{{ request('tanggal_dari') }}">
+                                <span class="mx-1">s/d</span>
+                                <input type="date" name="tanggal_sampai" class="form-control" placeholder="Sampai tanggal" value="{{ request('tanggal_sampai') }}">
                             </div>
 
                             <!-- Search -->
@@ -79,8 +87,7 @@
                         </form>
 
                         <!-- Add Button -->
-                        <a href="{{ url('/kasir') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus mr-1"></i>
+                        <a href="{{ url('/kasir') }}" class="btn btn-primary btn-sm mx-1">
                             Transaksi Baru
                         </a>
                     </div>
@@ -98,6 +105,7 @@
                                 <th style="min-width: 60px; white-space: nowrap;">No</th>
                                 <th style="min-width: 150px; white-space: nowrap;">Kode Transaksi</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Nama Customer</th>
+                                <th style="min-width: 100px; white-space: nowrap;">Tanggal</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Total</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Status</th>
                                 <th style="min-width: 120px; white-space: nowrap;">Aksi</th>
@@ -114,6 +122,7 @@
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
                                     <td style="white-space: nowrap;">{{ $item->kode_transaksi }}</td>
                                     <td style="white-space: nowrap;">{{ $item->customer }}</td>
+                                    <td style="white-space: nowrap;">{{ $item->tanggal }}</td>
                                     <td
                                         style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
                                         {{ format_rupiah($item->total_bayar) }}</td>

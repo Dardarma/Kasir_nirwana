@@ -118,6 +118,8 @@ class ControllerPemakaian extends Controller
     {
         $search = $request->input('table_search', '');
         $paginate = $request->input('paginate', 10);
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
 
         // Query untuk mendapatkan daftar pemakaian
         $transaksi = Transaksi::with('transaksiDetail')
@@ -125,6 +127,9 @@ class ControllerPemakaian extends Controller
             ->where('jenis_transaksi', 'pemakaian')
             ->when($search, function ($query, $search) {
                 return $query->where('kode_transaksi', 'like', '%' . $search . '%');
+            })
+            ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
+                return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
             })
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);

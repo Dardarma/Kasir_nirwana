@@ -124,6 +124,8 @@ class KasirController extends Controller
     {
         $search = $request->input('table_search', '');
         $paginate = $request->input('paginate', 10);
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
 
         $transaksi = Transaksi::with('transaksiDetail')
             ->where('jenis_transaksi', 'penjualan')
@@ -133,6 +135,9 @@ class KasirController extends Controller
                     $q->where('kode_transaksi', 'like', '%' . $search . '%')
                       ->orWhere('customer', 'like', '%' . $search . '%');
                 });
+            })
+            ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
+                return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
             })
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);

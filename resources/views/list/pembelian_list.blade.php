@@ -47,12 +47,12 @@
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <h3 class="card-title mb-0">
                         Data Transaksi Pembelian
                     </h3>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
                         <form method="GET" action="{{ url('/pembelian/list') }}" class="d-flex align-items-center gap-2">
@@ -64,6 +64,13 @@
                                     <option value="50" {{ request('paginate') == 50 ? 'selected' : '' }}>50</option>
                                     <option value="100" {{ request('paginate') == 100 ? 'selected' : '' }}>100</option>
                                 </select>
+                            </div>
+
+                            {{-- filter date range --}}
+                            <div class="input-group input-group-sm mx-1" style="width: 220px;">
+                                <input type="date" name="tanggal_dari" class="form-control" placeholder="Dari tanggal" value="{{ request('tanggal_dari') }}">
+                                <span class="mx-1">s/d</span>
+                                <input type="date" name="tanggal_sampai" class="form-control" placeholder="Sampai tanggal" value="{{ request('tanggal_sampai') }}">
                             </div>
 
                             <!-- Search -->
@@ -80,7 +87,6 @@
 
                         <!-- Add Button -->
                         <a href="{{ url('/pembelian') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus mr-1"></i>
                             Transaksi Baru
                         </a>
                     </div>
@@ -97,6 +103,7 @@
                             <tr>
                                 <th style="min-width: 60px; white-space: nowrap;">No</th>
                                 <th style="min-width: 150px; white-space: nowrap;">Kode Transaksi</th>
+                                <th>Tanggal</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Total</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Status</th>
                                 <th style="min-width: 120px; white-space: nowrap;">Aksi</th>
@@ -112,6 +119,7 @@
                                 <tr>
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
                                     <td style="white-space: nowrap;">{{ $item->kode_transaksi }}</td>
+                                    <td style="white-space: nowrap;">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                                     <td
                                         style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
                                         {{ format_rupiah($item->total_bayar) }}</td>
