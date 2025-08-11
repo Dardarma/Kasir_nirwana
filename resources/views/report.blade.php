@@ -56,7 +56,7 @@
                     <h2>Laba Rugi</h2>
                     <br /><br />
                 </div>
-                <a href="/laba-rugi" class="small-box-footer">Klik <i class="fas fa-arrow-circle-right"></i></a>
+                <a href="{{ url('/laba-rugi') }}" class="small-box-footer">Klik <i class="fas fa-arrow-circle-right"></i></a>
             </div>
         </div>
         <div class="col-lg-3 col-6">
