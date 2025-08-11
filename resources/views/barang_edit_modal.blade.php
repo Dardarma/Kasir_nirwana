@@ -23,17 +23,18 @@
                     <div class="form-group">
                         <div class="form-group">
                             <label for="nama">Kategori</label>
-                            <select class="form-control" name="kategori" id="kategori_edit" onchange="changeKategoriEdit()" required>
-                               <option value="">-- Pilih Kategori --</option>
-                               <option value="produksi">Produksi</option>
-                               <option value="jadi">Jadi</option>
+                            <select class="form-control" name="kategori" id="kategori_edit"
+                                onchange="changeKategoriEdit()" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="produksi">Produksi</option>
+                                <option value="jadi">Jadi</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="nama">Sub Kategori</label>
                         <select class="form-control" name="sub_kategori" id="sub_kategori_edit" required>
-                           <option value="">-- Pilih Sub Kategori --</option>
+                            <option value="">-- Pilih Sub Kategori --</option>
                         </select>
                     </div>
                     <script>
@@ -42,16 +43,16 @@
                             // Set form action
                             document.getElementById('edit-form').action = '/barang/' + data.id;
                             document.getElementById('edit-id').value = data.id;
-                            
+
                             // Populate form fields
                             document.getElementById('nama').value = data.nama_barang;
                             document.getElementById('satuan').value = data.satuan;
                             document.getElementById('kategori_edit').value = data.kategori;
                             document.querySelector('#edit input[name="harga"]').value = data.harga;
-                            
+
                             // Trigger change event untuk kategori agar sub kategori terisi
                             changeKategoriEdit();
-                            
+
                             // Set sub kategori value setelah options dibuat
                             setTimeout(function() {
                                 document.getElementById('sub_kategori_edit').value = data.sub_kategori;
@@ -73,38 +74,37 @@
 </div>
 
 <script type="text/javascript">
-// Function untuk handle perubahan kategori di modal EDIT
-function changeKategoriEdit() {
-    var kategori = document.getElementById('kategori_edit').value;
-    var subKategori = document.getElementById('sub_kategori_edit');
-    
-    // Clear existing options
-    subKategori.innerHTML = '<option value="">-- Pilih Sub Kategori --</option>';
-    
-    // Enable sub kategori
-    subKategori.disabled = false;
-    
-    if (kategori === 'produksi') {
-        subKategori.innerHTML += '<option value="bahan_baku">Bahan Baku</option>';
-        subKategori.innerHTML += '<option value="penolong/alat">Penolong/Alat</option>';
-    } else if (kategori === 'jadi') {
-        subKategori.innerHTML += '<option value="barang_jadi">Barang Jadi</option>';
-    } else {
-        subKategori.disabled = true;
-    }
-}
+    // Function untuk handle perubahan kategori di modal EDIT
+    function changeKategoriEdit() {
+        var kategori = document.getElementById('kategori_edit').value;
+        var subKategori = document.getElementById('sub_kategori_edit');
 
-// Set initial state untuk edit modal
-document.addEventListener('DOMContentLoaded', function() {
-    var subKategoriEdit = document.getElementById('sub_kategori_edit');
-    if (subKategoriEdit) {
-        // Hanya disable jika kategori belum dipilih
-        var kategoriEdit = document.getElementById('kategori_edit');
-        if (!kategoriEdit.value) {
-            subKategoriEdit.disabled = true;
+        // Clear existing options
+        subKategori.innerHTML = '<option value="">-- Pilih Sub Kategori --</option>';
+
+        // Enable sub kategori
+        subKategori.disabled = false;
+
+        if (kategori === 'produksi') {
+            subKategori.innerHTML += '<option value="bahan_baku">Bahan Baku</option>';
+            subKategori.innerHTML += '<option value="penolong/alat">Penolong/Alat</option>';
+            subKategori.innerHTML += '<option value="produk_jadi">Produk Jadi</option>';
+        } else if (kategori === 'jadi') {
+            subKategori.innerHTML += '<option value="barang_jadi">Barang Jadi</option>';
+        } else {
+            subKategori.disabled = true;
         }
     }
-});
+
+    // Set initial state untuk edit modal
+    document.addEventListener('DOMContentLoaded', function() {
+        var subKategoriEdit = document.getElementById('sub_kategori_edit');
+        if (subKategoriEdit) {
+            // Hanya disable jika kategori belum dipilih
+            var kategoriEdit = document.getElementById('kategori_edit');
+            if (!kategoriEdit.value) {
+                subKategoriEdit.disabled = true;
+            }
+        }
+    });
 </script>
-
-

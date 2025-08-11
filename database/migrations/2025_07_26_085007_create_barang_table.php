@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('barang', function (Blueprint $table) {
             $table->id();
             $table->enum('kategori', ['produksi','jadi']);
-            $table->enum('sub_kategori',['bahan_baku', 'penolong/alat', 'barang_jadi']);
+            $table->enum('sub_kategori',['bahan_baku', 'penolong/alat', 'barang_jadi','produk_jadi']);
             $table->string('satuan');
             $table->string('nama_barang');
             $table->integer('harga')->nullable();

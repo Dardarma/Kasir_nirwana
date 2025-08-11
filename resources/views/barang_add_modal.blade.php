@@ -67,6 +67,7 @@ function changeKategori() {
     if (kategori === 'produksi') {
         subKategori.innerHTML += '<option value="bahan_baku">Bahan Baku</option>';
         subKategori.innerHTML += '<option value="penolong/alat">Penolong/Alat</option>';
+        subKategori.innerHTML += '<option value="produk_jadi">Produk Jadi</option>';
     } else if (kategori === 'jadi') {
         subKategori.innerHTML += '<option value="barang_jadi">Barang Jadi</option>';
     } else {

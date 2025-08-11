@@ -26,6 +26,7 @@ class PembelianController extends Controller
         'total' => 'required|numeric|min:0',
         'bayar' => 'required|numeric|min:0', // Izinkan bayar 0
         'customer_bayar' => 'required|numeric|min:0',
+        'metode_pembayaran' => 'required|in:tunai,transfer,qris',
         'items' => 'required|array',
         'items.*.barang_id' => 'required|exists:barang,id',
         'items.*.nama_barang' => 'required|string|max:255',
@@ -39,6 +40,11 @@ class PembelianController extends Controller
       $customerBayar = $request->customer_bayar;
       $total = $request->total;
       $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas'; // Kembali ke nilai enum yang benar
+      if ($statusPembayaran === 'lunas') {
+          $tanggal_pembayaran = Carbon::now()->format('Y-m-d');
+      } else {
+          $tanggal_pembayaran = null; // Atau bisa diisi dengan nilai default lainnya
+      }
 
       // create kode transaksi
       $tanggal_now = Carbon::now()->format('Ymd');
@@ -53,6 +59,8 @@ class PembelianController extends Controller
         'status_pembayaran' => $statusPembayaran,
         'jenis_transaksi' => 'pembelian',
         'kode_transaksi' => $kode_transaksi,
+        'metode_pembayaran' => $request->metode_pembayaran,
+        'tanggal_pembayaran' => $tanggal_pembayaran,
         'status' => 'aktif',
       ]);
 
@@ -146,10 +154,17 @@ class PembelianController extends Controller
       $customerBayar = $request->customer_bayar;
       $total = $transaksi->total_bayar;
       $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas';
-      
+
+      if ($statusPembayaran === 'lunas') {
+          $tanggal_pembayaran = Carbon::now()->format('Y-m-d');
+      } else {
+          $tanggal_pembayaran = null; // Atau bisa diisi dengan nilai default lainnya
+      }
+
       $transaksi->update([
         'customer_bayar' => $customerBayar,
-        'status_pembayaran' => $statusPembayaran
+        'status_pembayaran' => $statusPembayaran,
+        'tanggal_pembayaran' => $tanggal_pembayaran
       ]);
 
       return response()->json([

@@ -32,6 +32,7 @@ class KasirController extends Controller
                 'bayar' => 'required|numeric|min:0', // Izinkan bayar 0
                 'customer_bayar' => 'required|numeric|min:0',
                 'items' => 'required|array',
+                'metode_pembayaran' => 'required|in:tunai,transfer,qris',
                 'items.*.barang_id' => 'required|exists:barang,id',
                 'items.*.nama_barang' => 'required|string|max:255',
                 'items.*.jumlah' => 'required|numeric|min:1',
@@ -44,6 +45,12 @@ class KasirController extends Controller
             $customerBayar = $request->customer_bayar;
             $total = $request->total;
             $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas'; // Kembali ke nilai enum yang benar
+
+            if ($statusPembayaran === 'lunas') {
+                $tanggal_pembayaran = Carbon::now()->format('Y-m-d');
+            } else {
+                $tanggal_pembayaran = null; // Atau bisa diisi dengan nilai default lainnya
+            }
 
             $tanggal_now = Carbon::now()->format('Ymd');
             $jumlah_trasaksi_today = Transaksi::whereDate('created_at', Carbon::today())->count();
@@ -80,8 +87,12 @@ class KasirController extends Controller
                 'customer_bayar' => $request->customer_bayar, // Simpan customer_bayar
                 'kode_transaksi' => $kode_transaksi,
                 'jenis_transaksi' => 'penjualan',
+                'tanggal_pembayaran' => $tanggal_pembayaran,
                 'status' => 'aktif', // Tambah status yang required
+                'metode_pembayaran' => $request->metode_pembayaran, // Simpan metode pembayaran
             ]);
+
+            
 
 
 
@@ -201,9 +212,12 @@ class KasirController extends Controller
             $transaksi = Transaksi::findOrFail($id);
             $transaksi->customer_bayar = $request->input('customer_bayar');
 
+            
+
             // Update status berdasarkan logic pembayaran
             if ($transaksi->customer_bayar >= $transaksi->total_bayar) {
                 $transaksi->status_pembayaran = 'lunas';
+                $transaksi->tanggal_pembayaran = Carbon::now()->format('Y-m-d');
             } else {
                 $transaksi->status_pembayaran = 'belum_lunas';
             }

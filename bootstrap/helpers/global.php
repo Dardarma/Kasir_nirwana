@@ -14,8 +14,7 @@ if (!function_exists('get_barang_jadi')) {
     function get_barang_jadi()
     {
         return Barang::where('status', 'aktif')
-            ->where('kategori', 'jadi')
-            ->where('sub_kategori', '!=', 'penolong/alat')
+            ->whereNotIn('sub_kategori', ['penolong/alat', 'bahan_baku'])
             ->get();
     }
 }
@@ -67,7 +66,7 @@ if (!function_exists('get_barang_produksi')) {
     {
         return Barang::where('status', 'aktif')
             ->where('kategori', 'produksi')
-            ->where('sub_kategori', '!=', 'penolong/alat')
+            ->whereNotIn('sub_kategori', ['penolong/alat'])
             ->get();
     }
 }

@@ -8,12 +8,16 @@ use App\Models\Transaksi;
 use App\Models\Transaksi_detail;
 use App\Models\Stok_keluar;
 use Illuminate\Support\Carbon;
+use App\Models\Barang;
 
 class ControllerPemakaian extends Controller
 {
     public function index()
     {
-        $barang = get_barang_produksi();
+        $barang =  Barang::where('status', 'aktif')
+            ->where('kategori', 'produksi')
+            ->whereNotIn('sub_kategori', ['penolong/alat', 'produk_jadi'])
+            ->get();
 
         // Debug: lihat data barang yang di-load
         Log::info('Barang loaded for pemakaian:', $barang->toArray());

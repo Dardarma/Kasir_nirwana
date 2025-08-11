@@ -154,7 +154,7 @@
                     entries</p>
             </div>
             <div class="col-auto m-2">
-                {{ $transaksi->links() }}
+                {{ $transaksi->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
@@ -214,6 +214,17 @@
                                 (response.transaksi.status_pembayaran === 'lunas' ?
                                     'badge-success' : 'badge-danger') +
                                 '">' + response.transaksi.status_pembayaran + '</span>');
+                            
+                            // Handle tanggal pembayaran - tampilkan "-" jika null
+                            if (response.transaksi.tanggal_pembayaran && response.transaksi.tanggal_pembayaran !== null) {
+                                $('#detail-tanggal-pembayaran').text(new Date(response.transaksi.tanggal_pembayaran)
+                                    .toLocaleDateString('id-ID'));
+                            } else {
+                                $('#detail-tanggal-pembayaran').text('-');
+                            }
+                            
+                            // Handle metode pembayaran - tampilkan "-" jika null atau kosong
+                            $('#detail-metode-pembayaran').text(response.transaksi.metode_pembayaran || '-');
 
                             // Debug: log semua data transaksi
                             console.log('Full transaksi data:', response.transaksi);

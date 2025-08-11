@@ -18,6 +18,20 @@
                         </tr>
                         <tr>
                             <td style="width: 30%">
+                                Metode Pembayaran
+                            </td>
+                            <td>:</td>
+                            <td style="width: 70%">
+                                <select class="form-control" id="metode_pembayaran" name="metode_pembayaran" required>
+                                    <option value="">Pilih Metode Pembayaran</option>
+                                    <option value="tunai">Tunai</option>
+                                    <option value="transfer">Transfer</option>
+                                    <option value="qris">QRIS</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 30%">
                                 Tanggal
                             </td>
                             <td>:</td>
@@ -573,6 +587,7 @@
                 var customerBayar = document.getElementById('customer_bayar').value;
                 var costumer = document.getElementById('costumer').value;
                 var bayar = document.getElementById('bayar').value;
+                var metodePembayaran = document.getElementById('metode_pembayaran').value;
                 var total = grandTotal;
 
                 if (!costumer) {
@@ -596,12 +611,18 @@
                     return;
                 }
 
+                if (!metodePembayaran) {
+                    alert('Silakan pilih metode pembayaran!');
+                    return;
+                }
+
                 let data = {
                     items: item_list,
                     tanggal: tanggal,
                     costumer: costumer,
                     total: total,
                     bayar: bayar,
+                    metode_pembayaran: metodePembayaran,
                     customer_bayar: customerBayar,
                     _token: $('meta[name="csrf-token"]').attr('content')
                 };

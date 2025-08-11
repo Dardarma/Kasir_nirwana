@@ -17,6 +17,21 @@
                                     value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
                             </td>
                         </tr>
+                        <tr>
+                            <td style="width: 30%">
+                                Metode Pembayaran
+                            </td>
+                            <td>:</td>
+                            <td style="width: 70%">
+                                <select class="form-control" id="metode_pembayaran" name="metode_pembayaran" required>
+                                    <option value="">Pilih Metode Pembayaran</option>
+                                    <option value="tunai">Tunai</option>
+                                    <option value="transfer">Transfer</option>
+                                    <option value="qris">QRIS</option>
+                                </select>
+                            </td>
+                        </tr>
+
 
                     </table>
 
@@ -122,7 +137,8 @@
                     <div class="col-12">
                         <div class="form-group">
                             <label for="sub_total">Sub Total</label>
-                            <input type="text" class="form-control" name="sub_total" id="sub_total" readonly required>
+                            <input type="text" class="form-control" name="sub_total" id="sub_total" readonly
+                                required>
                         </div>
                     </div>
                     <div class="col-12">
@@ -137,7 +153,8 @@
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah"
                         onclick="tambahItem()">Tambah</button>
-                    <a href="{{url('/pembelian/list')}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <a href="{{ url('/pembelian/list') }}" type="button" class="btn btn-info"
+                        id="btn-laporan">Laporan</a>
                     <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
             </div>
@@ -157,6 +174,7 @@
             var select = document.getElementById('barang');
             var satuanInput = document.getElementById('satuan');
             var hargaInput = document.getElementById('harga');
+
 
             if (select.value === '') {
                 satuanInput.value = '';
@@ -199,6 +217,7 @@
             var hargaInput = document.getElementById('harga');
             var satuan = document.getElementById('satuan').value;
             var keterangan = document.getElementById('keterangan').value;
+            var metode_pembayaran = document.getElementById('metode_pembayaran').value;
 
             var jumlah = parseFloat(jumlahInput.value) || 0;
             var harga = parseFloat(hargaInput.value) || 0;
@@ -219,7 +238,7 @@
                 return;
             }
 
-         
+
 
             // Get selected option data
             var selectedOption = barangSelect.options[barangSelect.selectedIndex];
@@ -267,7 +286,7 @@
                 satuan: satuan,
                 harga: harga,
                 sub_total: subTotal,
-                keterangan: keterangan
+                keterangan: keterangan,
             });
 
             // Increment counter
@@ -322,7 +341,7 @@
 
             // Hitung kembalian
             var kembalian = bayar - grandTotal;
-            
+
             // Update display kembalian
             if (kembalian >= 0) {
                 kembalianInput.value = `Rp ${formatRupiah(kembalian)}`;
@@ -364,6 +383,7 @@
             document.getElementById('satuan').value = '';
             document.getElementById('sub_total').value = '';
             document.getElementById('keterangan').value = '';
+            document.getElementById('metode_pembayaran').value = '';
 
             // Trigger change untuk select2 jika ada
             if (typeof $ !== 'undefined' && $('#barang').hasClass('select2')) {
@@ -476,6 +496,7 @@
                 var customerBayar = document.getElementById('customer_bayar').value;
                 var bayar = document.getElementById('bayar').value;
                 var total = grandTotal;
+                var metode_pembayaran = document.getElementById('metode_pembayaran').value;
 
 
                 // Izinkan bayar 0 atau lebih
@@ -494,11 +515,17 @@
                     return;
                 }
 
+                if (!metode_pembayaran) {
+                    alert('Silakan isi metode pembayaran!');
+                    return;
+                }
+
                 let data = {
                     items: item_list,
                     tanggal: tanggal,
                     total: total,
                     bayar: bayar,
+                    metode_pembayaran: metode_pembayaran,
                     customer_bayar: customerBayar,
                     _token: $('meta[name="csrf-token"]').attr('content')
                 };

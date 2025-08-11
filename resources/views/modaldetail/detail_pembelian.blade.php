@@ -16,6 +16,16 @@
                                 <td><strong>Kode Transaksi:</strong></td>
                                 <td id="detail-kode"></td>
                             </tr>
+                            <tr>
+                                <td><strong>Customer Bayar:</strong></td>
+                                <td>
+                                    <input type="number" class="form-control" name="customer_bayar" id="detail-customer-bayar-input" min="0" step="0.01">
+                                </td>
+                            </tr>
+                             <tr>
+                                <td><strong>Tanggal Pembayaran:</strong></td>
+                                <td id="detail-tanggal-pembayaran"></td>
+                            </tr>
                         </table>
                     </div>
                     <div class="col-md-6">
@@ -28,15 +38,9 @@
                                 <td><strong>Status:</strong></td>
                                 <td id="detail-status"></td>
                             </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Customer Bayar:</strong></td>
-                                <td>
-                                    <input type="number" class="form-control" name="customer_bayar" id="detail-customer-bayar-input" min="0" step="0.01">
-                                </td>
+                             <tr>
+                                <td><strong>Metode Pembayaran:</strong></td>
+                                <td id="detail-metode-pembayaran"></td>
                             </tr>
                         </table>
                     </div>

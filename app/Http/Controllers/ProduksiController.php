@@ -13,8 +13,10 @@ class ProduksiController extends Controller
 {
     public function index(){
 
-        $barang = get_barang_jadi();
-
+        $barang =  Barang::where('status', 'aktif')
+            ->where('kategori', 'jadi')
+            ->get();
+    
         return view('produksi', compact('barang'));
 
     }

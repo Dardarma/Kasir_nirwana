@@ -69,9 +69,11 @@
 
                             {{-- filter date range --}}
                             <div class="input-group input-group-sm mx-1" style="width: 220px;">
-                                <input type="date" name="tanggal_dari" class="form-control" placeholder="Dari tanggal" value="{{ request('tanggal_dari') }}">
+                                <input type="date" name="tanggal_dari" class="form-control" placeholder="Dari tanggal"
+                                    value="{{ request('tanggal_dari') }}">
                                 <span class="mx-1">s/d</span>
-                                <input type="date" name="tanggal_sampai" class="form-control" placeholder="Sampai tanggal" value="{{ request('tanggal_sampai') }}">
+                                <input type="date" name="tanggal_sampai" class="form-control"
+                                    placeholder="Sampai tanggal" value="{{ request('tanggal_sampai') }}">
                             </div>
 
                             <!-- Search -->
@@ -214,9 +216,20 @@
                             $('#detail-customer').text(response.transaksi.customer);
                             $('#detail-tanggal').text(new Date(response.transaksi.tanggal)
                                 .toLocaleDateString('id-ID'));
-                            $('#detail-status').html('<span class="badge ' + 
-                                (response.transaksi.status_pembayaran === 'lunas' ? 'badge-success' : 'badge-danger') + 
+                            $('#detail-status').html('<span class="badge ' +
+                                (response.transaksi.status_pembayaran === 'lunas' ?
+                                    'badge-success' : 'badge-danger') +
                                 '">' + response.transaksi.status_pembayaran + '</span>');
+                            if (response.transaksi.tanggal_pembayaran && response.transaksi
+                                .tanggal_pembayaran !== null) {
+                                $('#detail-tanggal-pembayaran').text(new Date(response.transaksi
+                                        .tanggal_pembayaran)
+                                    .toLocaleDateString('id-ID'));
+                            } else {
+                                $('#detail-tanggal-pembayaran').text('-');
+                            }
+                            $('#detail-metode-pembayaran').text(
+                                response.transaksi.metode_pembayaran || '-');
 
                             // Debug: log semua data transaksi
                             console.log('Full transaksi data:', response.transaksi);
@@ -227,9 +240,8 @@
                             $('#detail-customer-bayar-input').val(response.transaksi
                                 .customer_bayar || 0);
 
-                            // Debug: cek apakah input berhasil diisi
-                            console.log('Input value after populate:', $(
-                                '#detail-customer-bayar-input').val());
+                            
+
                         } else {
                             $('#detail-items').html(
                                 '<tr><td colspan="6" class="text-center">Tidak ada data detail</td></tr>'
