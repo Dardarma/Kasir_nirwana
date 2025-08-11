@@ -191,7 +191,7 @@
                         <p>Showing {{ $barang->firstItem() }} to {{ $barang->lastItem() }} of {{ $barang->total() }} entries</p>
                     </div>
                     <div class="col-auto m-2">
-                        {{ $barang->appends(request()->query())->links() }}
+                        {{$barang->links()}}
                     </div>
                 </div>
                 </div>
@@ -241,8 +241,8 @@
         $('#edit').find('#sub_kategori_edit').val(sub_kategori);
         $('#edit').find('input[name="harga"]').val(harga);
         
-        // Set the form action to the correct URL using Laravel url() helper
-        $('#edit form').attr('action', '{{ url("/barang") }}/' + id);
+        // Set the form action to the correct URL
+        $('#edit form').attr('action', '/barang/' + id);
     });
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -272,8 +272,8 @@ document.querySelectorAll('.btn-delete').forEach(button => {
         const id = this.getAttribute('data-id');
         const nama_barang = this.getAttribute('data-nama_barang');
         
-        // Set the form action to the correct URL using Laravel url() helper
-        document.querySelector('#delete-form').setAttribute('action', '{{ url("/barang/delete") }}/' + id);
+        // Set the form action to the correct URL using the route
+        document.querySelector('#delete-form').setAttribute('action', '/barang/delete/' + id);
         
         // Set the confirmation message
         document.querySelector('#delete-message').innerHTML = `Apakah Anda yakin ingin menghapus barang <strong>${nama_barang}</strong>?`;

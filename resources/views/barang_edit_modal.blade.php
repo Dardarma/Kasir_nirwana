@@ -40,8 +40,8 @@
                     <script>
                         // Function untuk populate data ke form edit
                         function populateEditForm(data) {
-                            // Set form action dengan url() agar support subfolder/public
-                            document.getElementById('edit-form').action = (typeof url === 'function' ? url('/barang/' + data.id) : (window.APP_URL ? window.APP_URL + '/barang/' + data.id : '{{ url('/barang') }}/' + data.id));
+                            // Set form action
+                            document.getElementById('edit-form').action = '/barang/' + data.id;
                             document.getElementById('edit-id').value = data.id;
 
                             // Populate form fields

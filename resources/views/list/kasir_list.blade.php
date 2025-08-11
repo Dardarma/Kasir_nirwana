@@ -180,7 +180,7 @@
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '/kasir/' + id + '/detail',
+                    url: '{{ url("/kasir") }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html(
@@ -279,7 +279,7 @@
                 }
 
                 $.ajax({
-                    url: '/kasir/edit/' + transaksiId,
+                    url: '{{ url("/kasir/edit") }}/' + transaksiId,
                     type: 'PUT',
                     data: {
                         customer_bayar: customerBayar,

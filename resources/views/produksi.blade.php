@@ -329,7 +329,7 @@
                 console.log('Final data:', data); // Debug
 
                 $.ajax({
-                    url: '/produksi',
+                    url: '{{ url("/produksi") }}',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {

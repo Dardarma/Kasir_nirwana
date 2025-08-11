@@ -175,7 +175,7 @@
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '/pembelian/' + id + '/detail',
+                    url: '{{ url("/pembelian") }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html(
@@ -275,7 +275,7 @@
                 }
 
                 $.ajax({
-                    url: '/pembelian/edit/' + transaksiId,
+                    url: '{{ url("/pembelian/edit") }}/' + transaksiId,
                     type: 'PUT',
                     data: {
                         customer_bayar: customerBayar,

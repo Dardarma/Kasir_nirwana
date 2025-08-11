@@ -131,7 +131,7 @@
 
                 // Get stok real-time via AJAX
                 $.ajax({
-                    url: `/pemakaian/stok-realtime/${barangId}`,
+                    url: `{{ url('/pemakaian/stok-realtime') }}/${barangId}`,
                     type: 'GET',
                     success: function(response) {
                         if (response.status === 'success') {
@@ -308,7 +308,7 @@
                     var barangId = $(this).val();
                     if (barangId) {
                         $.ajax({
-                            url: `/pemakaian/stok-realtime/${barangId}`,
+                            url: `{{ url('/pemakaian/stok-realtime') }}/${barangId}`,
                             type: 'GET',
                             success: function(response) {
                                 if (response.status === 'success') {
@@ -390,7 +390,7 @@
                     console.log('Final data:', data); // Debug
 
                     $.ajax({
-                        url: '/pemakaian',
+                        url: '{{ url("/pemakaian") }}',
                         type: 'POST',
                         data: data,
                         beforeSend: function() {

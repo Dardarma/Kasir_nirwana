@@ -162,7 +162,7 @@
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '/pemakaian/' + id + '/detail',
+                    url: '{{ url("/pemakaian") }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html('<tr><td colspan="6" class="text-center">Loading...</td></tr>');

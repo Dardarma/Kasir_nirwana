@@ -533,7 +533,7 @@
                 console.log('Final data:', data); // Debug
 
                 $.ajax({
-                    url: '/pembelian',
+                    url: '{{ url("/pembelian") }}',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {

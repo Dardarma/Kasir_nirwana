@@ -197,7 +197,7 @@
 
             // Get stok real-time via AJAX
             $.ajax({
-                url: `/kasir/stok-realtime/${barangId}`,
+                url: `{{ url('/kasir/stok-realtime') }}/${barangId}`,
                 type: 'GET',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -486,7 +486,7 @@
                 var barangId = $(this).val();
                 if (barangId) {
                     $.ajax({
-                        url: `/kasir/stok-realtime/${barangId}`,
+                        url: `{{ url('/kasir/stok-realtime') }}/${barangId}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.status === 'success') {
@@ -630,7 +630,7 @@
                 console.log('Final data:', data); // Debug
 
                 $.ajax({
-                    url: '/kasir',
+                    url: '{{ url("/kasir") }}',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {
