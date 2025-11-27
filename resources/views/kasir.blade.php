@@ -13,7 +13,16 @@
                             </td>
                             <td>:</td>
                             <td style="width: 70%">
-                                <input type="text" class="form-control" id="costumer" name="costumer" required>
+                                <select class="form-control" id="customer" name="customer" onchange="updateBarangByCustomer()" required>
+                                    <option value="">Pilih Customer</option>
+                                    @if ($costumer->isEmpty())
+                                        <option value="">Tidak ada customer tersedia</option>
+                                    @else
+                                        @foreach ($costumer as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
                             </td>
                         </tr>
                         <tr>
@@ -104,20 +113,10 @@
             <div class="" style="margin-top: 50px;">
                 <div class="form-group">
                     <label for="barang">Barang</label>
-                    <select class="form-control select2" name="barang" id="barang" onchange="updateSatuan()" required>
-                        <option value="">Pilih Barang</option>
-                        @if ($barang->isEmpty())
-                            <option value="">Tidak ada barang tersedia</option>
-                        @else
-                            @foreach ($barang as $item)
-                                <option value="{{ $item->id }}" data-satuan="{{ $item->satuan }}"
-                                    data-harga="{{ $item->harga }}"
-                                    data-stok="{{ get_stok()->firstWhere('id', $item->id)->stok ?? 0 }}">
-                                    {{ $item->nama_barang }}
-                                </option>
-                            @endforeach
-                        @endif
+                    <select class="form-control select2" name="sub_barang" id="sub_barang" onchange="updateSatuan()" disabled required>
+                        <option value="">Pilih Customer terlebih dahulu</option>
                     </select>
+                    <input type="hidden" id="barang_id" name="barang_id" >
                 </div>
                 <div class="row">
                     <div class="col-12">
@@ -130,8 +129,10 @@
                     <div class="col-9">
                         <div class="form-group">
                             <label for="jumlah">Jumlah</label>
-                            <input type="number" class="form-control" name="jumlah" oninput="updateSubTotal()"
+                            <input type="number" class="form-control" name="jumlah" id="jumlah" oninput="updateSubTotal()"
                                 min="1" required>
+                            <input type="hidden" id="gramasi" name="gramasi">
+                            <input type="hidden" id="jumlah_gram" name="jumlah_gram">
                             <small class="text-muted" id="stok-info">Pilih barang untuk melihat stok</small>
                         </div>
                     </div>
@@ -166,11 +167,63 @@
         let itemCounter = 1;
         let grandTotal = 0;
         var item_list = [];
-        var currentStok = 0; // Variable untuk menyimpan stok barang yang dipilih
+        var currentStok = 0; 
 
-        // Function untuk update satuan dan harga (vanilla JavaScript)
+
+
+        // Function untuk update barang berdasarkan customer yang dipilih
+        function updateBarangByCustomer() {
+            var customerSelect = document.getElementById('customer');
+            var barangSelect = document.getElementById('sub_barang');
+            var customerId = customerSelect.value;
+
+            
+            clearForm();
+
+            if (!customerId) {
+                barangSelect.disabled = true;
+                barangSelect.innerHTML = '<option value="">Pilih Customer terlebih dahulu</option>';
+                return;
+            }
+
+            // Enable select barang dan loading
+            barangSelect.disabled = false;
+            barangSelect.innerHTML = '<option value="">Loading...</option>';
+
+            // AJAX call untuk get barang berdasarkan customer
+            $.ajax({
+                url: `{{ url('/kasir/barang-by-customer') }}/${customerId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 'success' && response.data.length > 0) {
+                        var options = '<option value="">Pilih Barang</option>';
+                        response.data.forEach(function(item) {
+                            options += `<option value="${item.id}" 
+                                data-satuan="${item.satuan}" 
+                                data-harga="${item.harga}" 
+                                data-id-barang="${item.barang_id}"
+                                data-customer-id="${item.user_id}"
+                                data-gramasi="${item.gramasi}"
+                                >
+                                ${item.sub_nama}
+                            </option>`;
+                        });
+                        barangSelect.innerHTML = options;
+                    } else {
+                        barangSelect.innerHTML = '<option value="">Tidak ada barang untuk customer ini</option>';
+                    }
+                },
+                error: function() {
+                    barangSelect.innerHTML = '<option value="">Error loading barang</option>';
+                    alert('Gagal memuat data barang');
+                }
+            });
+        }
+
         function updateSatuan() {
-            var select = document.getElementById('barang');
+            var select = document.getElementById('sub_barang');
+            var id_barang = document.getElementById('barang_id');
+            var gramasiInput = document.getElementById('gramasi');
             var satuanInput = document.getElementById('satuan');
             var hargaInput = document.getElementById('harga');
             var stokInfo = document.getElementById('stok-info');
@@ -180,24 +233,33 @@
                 satuanInput.value = '';
                 hargaInput.value = '';
                 currentStok = 0;
+                id_barang.value = '';
                 stokInfo.textContent = 'Pilih barang untuk melihat stok';
                 stokInfo.className = 'text-muted';
                 jumlahInput.max = '';
+                gramasi.value = 0;
                 updateSubTotal();
                 return;
             }
 
+
             var selectedOption = select.options[select.selectedIndex];
             var satuan = selectedOption.getAttribute('data-satuan');
             var harga = selectedOption.getAttribute('data-harga');
-            var barangId = select.value;
+            var barangId = selectedOption.getAttribute('data-id-barang');
+            var subBarangId = selectedOption.value;
+            var gramasi = selectedOption.getAttribute('data-gramasi');
+
 
             satuanInput.value = satuan || '';
             hargaInput.value = harga || '';
+            id_barang.value = barangId || '';
+            gramasiInput.value = gramasi || '';
+
 
             // Get stok real-time via AJAX
             $.ajax({
-                url: `{{ url('/kasir/stok-realtime') }}/${barangId}`,
+                url: `{{ url('/kasir/stok-realtime') }}/${subBarangId}`,
                 type: 'GET',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -243,14 +305,18 @@
             });
         }
 
-        // Function untuk update sub total secara dinamis
         function updateSubTotal() {
             var hargaInput = document.getElementById('harga');
             var jumlahInput = document.querySelector('input[name="jumlah"]');
             var subTotalInput = document.getElementById('sub_total');
+            var jumlahGramInput = document.getElementById('jumlah_gram');
+            var gramasi = document.querySelector('input[name="gramasi"]');
 
             var harga = parseFloat(hargaInput.value) || 0;
             var jumlah = parseFloat(jumlahInput.value) || 0;
+            var gramasi = parseFloat(gramasi.value) || 0;
+
+            var jumlah_gram = gramasi * jumlah;
 
             // Validasi jumlah tidak melebihi stok
             if (jumlah > currentStok && currentStok > 0) {
@@ -263,22 +329,27 @@
 
             // Format sub total dengan rupiah
             subTotalInput.value = subTotal > 0 ? `Rp ${formatRupiah(subTotal)}` : '';
+            jumlahGramInput.value = jumlah_gram > 0 ? jumlah_gram : '';
         }
 
-        // Function untuk tambah item ke table
         function tambahItem() {
+            var customerSelect = document.getElementById('customer');
+            if (!customerSelect.value) {
+                alert('Silakan pilih customer terlebih dahulu!');
+                return;
+            }
 
-            // Get form values
-            var barangSelect = document.getElementById('barang');
+            var sub_barangSelect = document.getElementById('sub_barang');
             var jumlahInput = document.querySelector('input[name="jumlah"]');
             var hargaInput = document.getElementById('harga');
             var satuan = document.getElementById('satuan').value;
+            var barangId = document.getElementById('barang_id').value;
+            var jumlahGram = document.getElementById('jumlah_gram').value;
 
             var jumlah = parseFloat(jumlahInput.value) || 0;
             var harga = parseFloat(hargaInput.value) || 0;
 
-            // Validation
-            if (!barangSelect.value) {
+            if (!sub_barangSelect.value) {
                 alert('Silakan pilih barang terlebih dahulu!');
                 return;
             }
@@ -305,11 +376,10 @@
             }
 
             // Get selected option data
-            var selectedOption = barangSelect.options[barangSelect.selectedIndex];
+            var selectedOption = sub_barangSelect.options[sub_barangSelect.selectedIndex];
             var namaBarang = selectedOption.text;
-            var barangId = barangSelect.value;
-
-            console.log('Nama:', namaBarang, 'Harga:', harga); // Debug
+            var sub_barangId = sub_barangSelect.value;
+            
 
             // Calculate subtotal
             var subTotal = jumlah * harga;
@@ -344,12 +414,14 @@
 
             //Add to item_list for backend
             item_list.push({
+                sub_barang_id: sub_barangId,
                 barang_id: barangId,
                 nama_barang: namaBarang,
                 jumlah: jumlah,
                 satuan: satuan,
                 harga: harga,
-                sub_total: subTotal
+                sub_total: subTotal,
+                jumlah_gram: jumlahGram
             });
 
             // Increment counter
@@ -359,32 +431,24 @@
 
         // Function untuk hapus item dari table
         function hapusItem(button, subTotal) {
-            // Get row data before removing
             var row = button.closest('tr');
             var barangId = row.getAttribute('data-id');
 
-            // Remove from item_list array
             item_list = item_list.filter(item => item.barang_id !== barangId);
 
-            // Remove row
             row.remove();
 
-            // Update grand total
             grandTotal -= subTotal;
             updateGrandTotal();
 
-            // Update row numbers
             updateRowNumbers();
 
-            console.log('Item removed, current list:', item_list); // Debug
         }
 
-        // Function untuk update grand total
         function updateGrandTotal() {
             var grandTotalElement = document.getElementById('grand-total');
             if (grandTotalElement) {
                 grandTotalElement.innerHTML = `Rp ${formatRupiah(grandTotal)}`;
-                console.log('Grand total updated:', grandTotal); // Debug
                 
                 // Update kembalian dan status pembayaran setelah grand total berubah
                 hitungKembalian();
@@ -429,7 +493,6 @@
             customerBayarHidden.value = customerBayarValue;
             customerBayarDisplay.value = `Rp ${formatRupiah(customerBayarValue)}`;
 
-            console.log('Calculation - Bayar:', bayar, 'Grand Total:', grandTotal, 'Kembalian:', kembalian, 'Customer Bayar:', customerBayarValue); // Debug
         }
 
         // Function untuk update nomor urut
@@ -443,11 +506,14 @@
 
         // Function untuk clear form setelah tambah item
         function clearForm() {
-            document.getElementById('barang').value = '';
+            document.getElementById('sub_barang').value = '';
             document.querySelector('input[name="jumlah"]').value = '';
             document.getElementById('harga').value = '';
             document.getElementById('satuan').value = '';
             document.getElementById('sub_total').value = '';
+            document.getElementById('barang_id').value = '';
+            document.getElementById('jumlah_gram').value = '';
+            document.getElementById('gramasi').value = '';
 
             // Reset stok info
             currentStok = 0;
@@ -514,12 +580,19 @@
             updateGrandTotal();
 
             // Reset form fields
-            document.getElementById('costumer').value = '';
+            document.getElementById('customer').value = '';
+            document.getElementById('metode_pembayaran').value = '';
             document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
             document.getElementById('bayar').value = '0'; // Set default ke 0
             document.getElementById('kembalian').value = '';
             document.getElementById('customer_bayar').value = '';
             document.getElementById('customer_bayar_display').value = '';
+            
+
+            // Reset barang select ke disabled state
+            var barangSelect = document.getElementById('sub_barang');
+            barangSelect.disabled = true;
+            barangSelect.innerHTML = '<option value="">Pilih Customer terlebih dahulu</option>';
 
             // Clear form input
             clearForm();
@@ -527,12 +600,10 @@
             // Refresh stok data setelah transaksi berhasil
             refreshStokData();
 
-            console.log('Form reset complete with stok refresh'); // Debug
         }
 
         // Event listener untuk tombol tambah
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded'); // Debug
 
             // Reset grand total saat load
             grandTotal = 0;
@@ -558,7 +629,7 @@
                 bayarInput.addEventListener('change', hitungKembalian);
             }
 
-            console.log('Initialization complete'); // Debug
+
         });
 
         // Handle Enter key untuk quick add
@@ -585,13 +656,13 @@
 
                 var tanggal = document.getElementById('tanggal').value;
                 var customerBayar = document.getElementById('customer_bayar').value;
-                var costumer = document.getElementById('costumer').value;
+                var costumer = document.getElementById('customer').value;
                 var bayar = document.getElementById('bayar').value;
                 var metodePembayaran = document.getElementById('metode_pembayaran').value;
                 var total = grandTotal;
 
                 if (!costumer) {
-                    alert('Silakan isi nama customer!');
+                    alert('Silakan pilih customer terlebih dahulu!');
                     return;
                 }
 
@@ -627,7 +698,6 @@
                     _token: $('meta[name="csrf-token"]').attr('content')
                 };
 
-                console.log('Final data:', data); // Debug
 
                 $.ajax({
                     url: '{{ url("/kasir") }}',
@@ -637,7 +707,6 @@
                         $('#btn-simpan').prop('disabled', true).text('Menyimpan...');
                     },
                     success: function(response) {
-                        console.log('Response:', response); // Debug
                         alert('Data berhasil disimpan!');
 
                         // Reset form dan table

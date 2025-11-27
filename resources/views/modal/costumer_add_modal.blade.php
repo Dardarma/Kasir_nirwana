@@ -2,45 +2,17 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="createModalLabel">Add Video</h5>
+                <h5 class="modal-title" id="createModalLabel">Add Costumer</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form method="post" action="{{ route('Barang_store') }}" enctype="multipart/form-data">
+                <form method="post" action="{{ route('costumer.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group">
-                        <label for="nama_barang">Nama Barang</label>
-                        <input type="text" class="form-control" name="nama_barang" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nama">Satuan</label>
-                        <input type="text" class="form-control" name="satuan" required>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-group">
-                            <label for="nama">Kategori</label>
-                            <select class="form-control" name="kategori" id="kategori" onchange="changeKategori()" required>
-                               <option value="">-- Pilih Kategori --</option>
-                               <option value="produksi">Produksi</option>
-                               <option value="jadi">Jadi</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="nama">Sub Kategori</label>
-                        <select class="form-control" name="sub_kategori" id="sub_kategori" required>
-                           <option value="">-- Pilih Sub Kategori --</option>
-                        </select>
-                    </div>
-                    <script>
-                        // Disable sub kategori saat load
-                        document.getElementById('sub_kategori').disabled = true;
-                    </script>
-                    <div class="form-group">
-                        <label for="nama">Harga</label>
-                        <input type="number" class="form-control" name="harga" required>
+                        <label for="name">Nama Costumer</label>
+                        <input type="text" class="form-control" name="name" required>
                     </div>
                     <div class="my-2">
                         <button type="submit" class="btn btn-primary">Simpan</button>

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('satuan');
             $table->string('nama_barang');
             $table->integer('harga')->nullable();
-            $table->enum('status', ['aktif', 'non_aktif'])->default('aktif');
+            $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->timestamps();
         });
     }

@@ -10,13 +10,17 @@ use App\Models\Stok_keluar;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\sub_barang;
+use App\Models\User;
 
 class KasirController extends Controller
 {
     public function index()
     {
-        $barang = get_barang_jadi();
-        return view('kasir', compact('barang'));
+
+        $costumer = user::select('id', 'name')->get();
+
+        return view('kasir', compact('costumer'));
     }
 
     public function store(Request $request)
@@ -29,7 +33,7 @@ class KasirController extends Controller
                 'tanggal' => 'required|date',
                 'costumer' => 'required|string|max:255',
                 'total' => 'required|numeric|min:0',
-                'bayar' => 'required|numeric|min:0', // Izinkan bayar 0
+                'bayar' => 'required|numeric|min:0',
                 'customer_bayar' => 'required|numeric|min:0',
                 'items' => 'required|array',
                 'metode_pembayaran' => 'required|in:tunai,transfer,qris',
@@ -39,17 +43,18 @@ class KasirController extends Controller
                 'items.*.satuan' => 'required|string|max:50',
                 'items.*.harga' => 'required|numeric|min:0',
                 'items.*.sub_total' => 'required|numeric|min:0',
+                'items.*.sub_barang_id' => 'required|exists:sub_barang,id',
+                'items.*.jumlah_gram' => 'required|numeric|min:0',
             ]);
 
-            // Logic status pembayaran di backend
             $customerBayar = $request->customer_bayar;
             $total = $request->total;
-            $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas'; // Kembali ke nilai enum yang benar
+            $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas';
 
             if ($statusPembayaran === 'lunas') {
                 $tanggal_pembayaran = Carbon::now()->format('Y-m-d');
             } else {
-                $tanggal_pembayaran = null; // Atau bisa diisi dengan nilai default lainnya
+                $tanggal_pembayaran = null; 
             }
 
             $tanggal_now = Carbon::now()->format('Ymd');
@@ -81,20 +86,16 @@ class KasirController extends Controller
 
             $transaksi = Transaksi::create([
                 'tanggal' => $request->tanggal,
-                'customer' => $request->costumer, // Map costumer dari frontend ke customer di database
-                'status_pembayaran' => $statusPembayaran, // Status ditentukan di backend
-                'total_bayar' => $request->total, // Map total dari frontend ke total_bayar di database
-                'customer_bayar' => $request->customer_bayar, // Simpan customer_bayar
+                'customer' => $request->costumer,
+                'status_pembayaran' => $statusPembayaran,
+                'total_bayar' => $request->total,
+                'customer_bayar' => $request->customer_bayar,
                 'kode_transaksi' => $kode_transaksi,
                 'jenis_transaksi' => 'penjualan',
                 'tanggal_pembayaran' => $tanggal_pembayaran,
-                'status' => 'aktif', // Tambah status yang required
-                'metode_pembayaran' => $request->metode_pembayaran, // Simpan metode pembayaran
+                'status' => 'aktif',
+                'metode_pembayaran' => $request->metode_pembayaran,
             ]);
-
-            
-
-
 
             foreach ($request->items as $item) {
                 $transaksi_detail = Transaksi_detail::create([
@@ -106,13 +107,14 @@ class KasirController extends Controller
                     'harga_satuan' => $item['harga'],
                     'subtotal' => $item['sub_total'],
                     'kategori_barang' => 'jadi',
-
+                    'sub_barang_id' => $item['sub_barang_id'],
+                    'jumlah_gram' => $item['jumlah_gram'],
                 ]);
 
                 Stok_keluar::create([
                     'barang_id' => $item['barang_id'],
                     'transaksi_detail_id' => $transaksi_detail->id,
-                    'qty_keluar' => $item['jumlah'],
+                    'qty_keluar' => $item['jumlah_gram'],
                 ]);
             }
 
@@ -142,9 +144,9 @@ class KasirController extends Controller
             ->where('jenis_transaksi', 'penjualan')
             ->where('status', 'aktif')
             ->when($search, function ($query, $search) {
-                return $query->where(function($q) use ($search) {
+                return $query->where(function ($q) use ($search) {
                     $q->where('kode_transaksi', 'like', '%' . $search . '%')
-                      ->orWhere('customer', 'like', '%' . $search . '%');
+                        ->orWhere('customer', 'like', '%' . $search . '%');
                 });
             })
             ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
@@ -155,7 +157,6 @@ class KasirController extends Controller
 
         return view('list.kasir_list', compact('transaksi'));
     }
-
 
 
     public function getDetail($id)
@@ -175,12 +176,19 @@ class KasirController extends Controller
         }
     }
 
-    public function getStokRealtime($barang_id = null)
+    public function getStokRealtime($sub_barang_id)
     {
         try {
-            if ($barang_id) {
-                // Get stok untuk barang tertentu
-                $stok = get_stok_by_id($barang_id);
+            if ($sub_barang_id) {
+
+                $subBarang = sub_barang::select('barang_id', 'gramasi')
+                    ->where('id', $sub_barang_id)
+                    ->first();
+                $gramasi = $subBarang->gramasi;
+                $barang_id = $subBarang->barang_id;
+                // dd($gramasi);
+                $stok = get_stok_by_id($barang_id, $gramasi);
+
                 return response()->json([
                     'status' => 'success',
                     'barang_id' => $barang_id,
@@ -202,6 +210,30 @@ class KasirController extends Controller
         }
     }
 
+    public function getBarangByCustomer($customer_id)
+    {
+        try {
+            $barang = sub_barang::with('barang')
+                ->where('user_id', $customer_id)
+                ->whereHas('barang', function ($query) {
+                    $query->where('status', 'aktif');
+                })
+                ->where('status', 'aktif')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $barang,
+                'message' => 'Data barang berhasil dimuat'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data barang: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function editStatusPembayaran(Request $request, $id)
     {
         try {
@@ -212,7 +244,7 @@ class KasirController extends Controller
             $transaksi = Transaksi::findOrFail($id);
             $transaksi->customer_bayar = $request->input('customer_bayar');
 
-            
+
 
             // Update status berdasarkan logic pembayaran
             if ($transaksi->customer_bayar >= $transaksi->total_bayar) {
@@ -245,7 +277,7 @@ class KasirController extends Controller
     {
         try {
             $transaksi = Transaksi::with('transaksiDetail')->findOrFail($id);
-            
+
             // Soft delete dengan mengubah status
             $transaksi->status = 'dibatalkan';
             $transaksi->save();

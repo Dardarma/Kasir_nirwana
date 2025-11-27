@@ -46,17 +46,18 @@ if (!function_exists('get_stok')) {
 }
 
 if (!function_exists('get_stok_by_id')) {
-    function get_stok_by_id($barang_id)
+    function get_stok_by_id($barang_id, $gramasi = 1)
     {
-        // Helper untuk mendapatkan stok real-time berdasarkan ID barang
         $stok_masuk = DB::table('stok_masuk')
             ->where('barang_id', $barang_id)
-            ->sum('qty_masuk');
-            
+            ->sum('qty_masuk')/$gramasi;
+
         $stok_keluar = DB::table('stok_keluar')
             ->where('barang_id', $barang_id)
-            ->sum('qty_keluar');
-            
+            ->sum('qty_keluar')/$gramasi;
+
+        // dd($stok_masuk, $stok_keluar);
+
         return $stok_masuk - $stok_keluar;
     }
 }

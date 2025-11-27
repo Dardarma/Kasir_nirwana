@@ -137,6 +137,22 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ url('/sub-barang') }}" class="nav-link">
+                                <i class="nav-icon fas fa-th"></i>
+                                <p>
+                                    Sub Barang
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url('/costumer') }}" class="nav-link">
+                                <i class="nav-icon fas fa-th"></i>
+                                <p>
+                                    Customer
+                                </p>
+                            </a>
+                        </li>
                         <li class="nav-item {{ request()->is('stok') ? 'active' : '' }}">
                             <a href="{{ url('/stok') }}" class="nav-link">
                                 <i class="nav-icon fas fa-th"></i>
@@ -161,6 +177,7 @@
                                 </p>
                             </a>
                         </li>
+
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->
@@ -172,7 +189,7 @@
         <div class="content-wrapper">
             <!-- Content Header (Page header) -->
             <div class="content-header">
-                @if ($errors->any())
+                {{-- @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul>
                             @foreach ($errors->all() as $error)
@@ -180,7 +197,7 @@
                             @endforeach
                         </ul>
                     </div>
-                @endif
+                @endif --}}
                 @yield('content-header')
             </div>
 

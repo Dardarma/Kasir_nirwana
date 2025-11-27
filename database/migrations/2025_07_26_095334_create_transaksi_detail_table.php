@@ -16,12 +16,14 @@ return new class extends Migration
             $table->foreignId('transaksi_id')->constrained('transaksi')->onDelete('cascade');
             $table->foreignId('barang_id')->constrained('barang')->onDelete('cascade');
             $table->integer('jumlah');
+            $table->integer('jumlah_gram');
             $table->integer('keterangan')->nullable();
             $table->integer('subtotal')->nullable();
             $table->string('nama_barang');
             $table->string('satuan');
             $table->string('kategori_barang');
             $table->integer('harga_satuan')->nullable();
+            $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->timestamps();
         });
     }

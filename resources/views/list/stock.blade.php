@@ -58,7 +58,8 @@
                                     <th style="min-width: 80px; white-space: nowrap;">Kategori</th>
                                     <th style="min-width: 100px; white-space: nowrap;">Sub Kategori</th>
                                     <th style="min-width: 80px; white-space: nowrap;">Harga</th>
-                                    <th style="min-width: 80px; white-space: nowrap;">Stok</th>
+                                    <th style="min-width: 80px; white-space: nowrap;">Stok (g)</th>
+                                    <th style="min-width: 80px; white-space: nowrap;">Stok (pcs)</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -74,7 +75,8 @@
                                     <td style="white-space: nowrap;">{{ ucfirst($item->kategori) }}</td>
                                     <td style="white-space: nowrap;">{{ str_replace('_', ' ', ucfirst($item->sub_kategori)) }}</td>
                                     <td style="white-space: nowrap;">{{ number_format($item->harga, 0, ',', '.') }}</td>
-                                    <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;" >{{ $item->stok }}</td>                                  
+                                    <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;" >{{ $item->stok }} g</td>
+                                    <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;" >{{ $item->stok_per_pcs }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

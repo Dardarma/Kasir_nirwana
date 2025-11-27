@@ -24,4 +24,9 @@ class Barang extends Model
     {
         return $this->hasMany(Stok_keluar::class);
     }
+
+    public function sub_barang()
+    {
+        return $this->hasMany(sub_barang::class);
+    }
 }

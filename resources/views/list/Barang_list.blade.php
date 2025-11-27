@@ -196,8 +196,8 @@
                 </div>
                 </div>
             </div>
-@include('barang_add_modal')
-@include('barang_edit_modal')
+@include('modal.barang_add_modal')
+@include('modal.barang_edit_modal')
 
 {{-- Modal Delete Confirmation --}}
 <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">

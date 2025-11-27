@@ -7,6 +7,8 @@ use App\Http\Controllers\KasirController;
 use App\Http\Controllers\ControllerStok;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\ControllerPemakaian;
+use App\Http\Controllers\ControllerCostumer;
+use App\Http\Controllers\ControllerSub_barang;
 
 Route::get('/', function () {
     return view('home');
@@ -17,6 +19,7 @@ Route::post('/kasir', [KasirController::class, 'store'])->name('kasir.store');
 Route::get('/kasir/list', [KasirController::class, 'list'])->name('kasir.list');
 Route::get('/kasir/{id}/detail', [KasirController::class, 'getDetail']);
 Route::get('/kasir/stok-realtime/{barang_id?}', [KasirController::class, 'getStokRealtime'])->name('kasir.stok-realtime');
+Route::get('/kasir/barang-by-customer/{customer_id}', [KasirController::class, 'getBarangByCustomer'])->name('kasir.barang-by-customer');
 Route::put('/kasir/edit/{id}', [KasirController::class, 'editStatusPembayaran'])->name('kasir.update');
 Route::put('/kasir/delete/{id}', [KasirController::class, 'destroy'])->name('kasir.destroy');
 
@@ -48,6 +51,17 @@ Route::put('/pemakaian/delete/{id}', [ControllerPemakaian::class, 'destroy'])->n
 Route::get('/pemakaian/stok-realtime/{barang_id?}', [ControllerPemakaian::class, 'getStokRealtime'])->name('pemakaian.stok-realtime');
 Route::get('/pemakaian/list', [ControllerPemakaian::class, 'list'])->name('pemakaian.list');
 Route::get('/pemakaian/{id}/detail', [ControllerPemakaian::class, 'getDetail']);
+
+Route::get('/costumer', [ControllerCostumer::class, 'index'])->name('costumer.index');
+Route::post('/costumer',[ControllerCostumer::class, 'store'])->name('costumer.store');
+Route::put('/costumer/{id}', [ControllerCostumer::class, 'update'])->name('costumer.update');
+Route::put('/costumer/delete/{id}', [ControllerCostumer::class, 'destroy'])->name('costumer.destroy');  
+
+Route::get('/sub-barang', [ControllerSub_barang::class, 'index'])->name('sub_barang.index');
+Route::post('/sub-barang', [ControllerSub_barang::class, 'store'])->name('sub_barang.store');
+Route::put('/sub-barang/{id}', [ControllerSub_barang::class, 'update'])->name('sub_barang.update');
+Route::put('/sub-barang/delete/{id}', [ControllerSub_barang::class, 'destroy'])->name('sub_barang.destroy');
+
 
 
 Route::get('/report',function(){

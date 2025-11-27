@@ -46,10 +46,14 @@ class ProduksiController extends Controller
             ]);
 
             foreach ($request->items as $item){
+
+                $jumlah_gram = $item['jumlah']*250;
+
                 $transaksi_detail =Transaksi_detail::create([
                     'transaksi_id' => $transaksi->id,
                     'barang_id' => $item['barang_id'],
                     'jumlah' => $item['jumlah'],
+                    'jumlah_gram' => $jumlah_gram,
                     'satuan' => $item['satuan'],
                     'kategori_barang' => 'jadi',
                     'nama_barang' => $item['nama_barang'],
@@ -58,7 +62,7 @@ class ProduksiController extends Controller
                 Stok_masuk::create([
                     'barang_id' => $item['barang_id'],
                     'transaksi_detail_id' => $transaksi_detail->id,
-                    'qty_masuk' => $item['jumlah'],
+                    'qty_masuk' => $jumlah_gram,
                 ]);
             }
 
