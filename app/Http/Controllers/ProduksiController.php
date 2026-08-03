@@ -46,8 +46,8 @@ class ProduksiController extends Controller
             ]);
 
             foreach ($request->items as $item){
-
-                $jumlah_gram = $item['jumlah']*250;
+                $barang = Barang::findOrFail($item['barang_id']);
+                $jumlah_gram = $this->convertToGram($item['jumlah'], $barang->satuan);
 
                 $transaksi_detail =Transaksi_detail::create([
                     'transaksi_id' => $transaksi->id,
@@ -79,6 +79,15 @@ class ProduksiController extends Controller
                 'message' => 'Gagal menyimpan data produksi: ' . $e->getMessage()
             ], 400);
         }
+    }
+
+    private function convertToGram(float $jumlah, string $satuan): int
+    {
+        return (int) round(match (strtolower(trim($satuan))) {
+            'kg', 'kilogram' => $jumlah * 1000,
+            'gram', 'gr', 'g' => $jumlah,
+            default => $jumlah,
+        });
     }
 
      public function list(Request $request)

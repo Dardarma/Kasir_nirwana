@@ -27,6 +27,54 @@
     <!-- Select2 -->
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="{{ asset('plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
+    <style>
+        :root {
+            --form-control-height: calc(2.25rem + 2px);
+        }
+
+        select.form-control:not([size]):not([multiple]) {
+            height: var(--form-control-height);
+            padding-top: .375rem;
+            padding-bottom: .375rem;
+            line-height: 1.5;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container .select2-selection--single {
+            height: var(--form-control-height);
+            padding: 0;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            box-sizing: border-box;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            height: 100%;
+            padding: .375rem 2rem .375rem .75rem;
+            line-height: 1.5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__arrow {
+            top: 0;
+            right: .25rem;
+            height: 100%;
+        }
+
+        .select2-results__option {
+            line-height: 1.35;
+            padding: .5rem .75rem;
+            white-space: normal;
+        }
+    </style>
     @yield('styles')
 </head>
 
@@ -63,15 +111,11 @@
             <a href="index3.html" class="brand-link">
                 <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
                     style="opacity: .8">
-                <span class="brand-text font-weight-light">AdminLTE 3</span>
+                <span class="brand-text font-weight-light">Nirwana</span>
             </a>
 
             <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Sidebar user panel (optional) -->
-
-
-                <!-- SidebarSearch Form -->
+            <div class= "sidebar">
                 <div class="form-inline mt-3">
                     <div class="input-group" data-widget="sidebar-search">
                         <input class="form-control form-control-sidebar" type="search" placeholder="Search"
@@ -83,104 +127,102 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Sidebar Menu -->
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
-
-                        <li class="nav-item {{ request()->is('/') ? 'active' : '' }}">
-                            <a href="{{ url('/') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
+                        <li class="nav-item {{ request()->is('home') ? 'active' : '' }}">
+                            <a href=" {{ url('/') }} "
+                                class="nav-link {{ request()->is('home') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-home"></i>
                                 <p>
-                                    Home
+                                    Dashboard
                                 </p>
                             </a>
                         </li>
-                        <li class="nav-item  {{ request()->is('kasir') ? 'active' : '' }}">
-                            <a href="{{ url('/kasir') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
+                        <li
+                            class="nav-item {{ request()->is('barang', 'sub-barang', 'costumer') ? 'menu-open' : '' }}">
+                            <a href="#"
+                                class="nav-link {{ request()->is('barang', 'sub-barang', 'costumer') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>
-                                    Kasir
+                                    Master Data
+                                    <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ url('/barang') }}"
+                                        class="nav-link {{ request()->is('barang') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Barang</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/sub-barang') }}"
+                                        class="nav-link {{ request()->is('sub-barang') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Sub Barang</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/costumer') }}"
+                                        class="nav-link {{ request()->is('costumer') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pelanggan</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item {{ request()->is('pembelian') ? 'active' : '' }}">
-                            <a href="{{ url('/pembelian') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
+                        <li
+                            class="nav-item {{ request()->is('kasir','pembelian','pemakaian','produksi','stok') ? 'menu-open' : '' }}">
+                            <a href="#"
+                                class="nav-link {{ request()->is('kasir','pembelian','pemakaian','produksi','stok') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-dollar-sign"></i>
                                 <p>
-                                    Pembelian
+                                    Transaksi
+                                    <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ url('/kasir') }}"
+                                        class="nav-link {{ request()->is('kasir') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Kasir</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/pembelian') }}"
+                                        class="nav-link {{ request()->is('pembelian') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pembelian</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/pemakaian') }}"
+                                        class="nav-link {{ request()->is('pemakaian') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pemakaian</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ url('/produksi') }}"
+                                        class="nav-link {{ request()->is('produksi') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Produksi</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('stok.index') }}"
+                                        class="nav-link {{ request()->is('stok') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Stok</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item {{ request()->is('pemakaian') ? 'active' : '' }}">
-                            <a href="{{ url('/pemakaian') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Pemakaian Barang
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ request()->is('produksi') ? 'active' : '' }}">
-                            <a href="{{ url('/produksi') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Produksi
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ request()->is('barang') ? 'active' : '' }}">
-                            <a href="{{ url('/barang') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Input Barang
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url('/sub-barang') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Sub Barang
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url('/costumer') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Customer
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ request()->is('stok') ? 'active' : '' }}">
-                            <a href="{{ url('/stok') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Stok
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url('/laba-rugi') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Laba Rugi
-                                </p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ url('/report') }}" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Report Penjualan
-                                </p>
-                            </a>
-                        </li>
-
                     </ul>
                 </nav>
-                <!-- /.sidebar-menu -->
             </div>
             <!-- /.sidebar -->
         </aside>
@@ -247,6 +289,8 @@
     <script src="{{ asset('dist/js/adminlte.js') }}"></script>
     <!-- Select2 -->
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
+    <!-- SweetAlert2 -->
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
     @yield('script')
 
     <script>
@@ -257,6 +301,40 @@
         $('.select2bs4').select2({
             theme: 'bootstrap4'
         })
+
+        const flashToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        })
+
+        @if (session('success'))
+            flashToast.fire({
+                icon: 'success',
+                title: @json(session('success'))
+            })
+        @endif
+
+        @if (session('error'))
+            flashToast.fire({
+                icon: 'error',
+                title: @json(session('error'))
+            })
+        @endif
+
+        @if ($errors->any())
+            flashToast.fire({
+                icon: 'error',
+                title: 'Validasi gagal',
+                html: @json(implode('<br>', $errors->all()))
+            })
+        @endif
     </script>
 </body>
 

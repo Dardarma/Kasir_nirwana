@@ -144,12 +144,19 @@ class PembelianController extends Controller
   public function editStatusPembayaran(Request $request, $id)
   {
     try {
+      $transaksi = Transaksi::findOrFail($id);
+
+      if ($transaksi->status_pembayaran === 'lunas') {
+        return response()->json([
+          'status' => 'error',
+          'message' => 'Pembayaran sudah lunas dan tidak dapat diubah.'
+        ], 422);
+      }
+
       $request->validate([
         'customer_bayar' => 'required|numeric|min:0'
       ]);
 
-      $transaksi = Transaksi::findOrFail($id);
-      
       // Logic status pembayaran
       $customerBayar = $request->customer_bayar;
       $total = $transaksi->total_bayar;

@@ -1,49 +1,5 @@
 @extends('layout')
 @section('content')
-    <!-- Alert Messages -->
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <script>
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('success-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-
-        <script>
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('error-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
@@ -185,6 +141,9 @@
                     beforeSend: function() {
                         $('#detail-items').html(
                             '<tr><td colspan="6" class="text-center">Loading...</td></tr>');
+                        $('#detail-customer-bayar-input').prop('disabled', true);
+                        $('#btn-update-bayar').prop('disabled', true).data('locked', true)
+                            .text('Memuat...');
                     },
                     success: function(response) {
                         console.log('Response received:', response); // Debug
@@ -240,7 +199,17 @@
                             $('#detail-customer-bayar-input').val(response.transaksi
                                 .customer_bayar || 0);
 
-                            
+                            const pembayaranLunas = response.transaksi.status_pembayaran ===
+                                'lunas';
+                            $('#detail-customer-bayar-input').prop('disabled',
+                                pembayaranLunas);
+                            $('#btn-update-bayar')
+                                .prop('disabled', pembayaranLunas)
+                                .data('locked', pembayaranLunas)
+                                .toggleClass('btn-success', !pembayaranLunas)
+                                .toggleClass('btn-secondary', pembayaranLunas)
+                                .text(pembayaranLunas ? 'Pembayaran Lunas' :
+                                    'Update Pembayaran');
 
                         } else {
                             $('#detail-items').html(
@@ -249,6 +218,8 @@
                         }
                     },
                     error: function(xhr, status, error) {
+                        $('#btn-update-bayar').prop('disabled', true).data('locked', true)
+                            .text('Update Pembayaran');
                         console.error('AJAX Error:', error); // Debug
                         console.error('Response:', xhr.responseText); // Debug
                         $('#detail-items').html(
@@ -265,6 +236,10 @@
 
             // Handle update pembayaran
             $('#btn-update-bayar').on('click', function() {
+                if ($(this).data('locked')) {
+                    return;
+                }
+
                 var transaksiId = $(this).data('transaksi-id');
                 var customerBayar = $('#detail-customer-bayar-input').val();
 
@@ -299,8 +274,10 @@
                             error));
                     },
                     complete: function() {
-                        $('#btn-update-bayar').prop('disabled', false).text(
-                            'Update Pembayaran');
+                        if (!$('#btn-update-bayar').data('locked')) {
+                            $('#btn-update-bayar').prop('disabled', false).text(
+                                'Update Pembayaran');
+                        }
                     }
                 });
             });

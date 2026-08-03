@@ -3,67 +3,12 @@
 @endsection
 @section('content')
 
-    {{-- Alert Messages --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
-            <div class="d-flex justify-content-between align-items-center">
-                <span>{{ session('success') }}</span>
-                <small class="text-muted ml-2" id="success-time"></small>
-            </div>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <script>
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('success-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="validation-alert">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                <small class="text-muted ml-2" id="validation-time"></small>
-            </div>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <script>
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('validation-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
                 <div class="col-6">
                     <h2>
-                        Costumer
+                        Pelanggan
                     </h2>
                 </div>
 
@@ -92,8 +37,7 @@
                             </div>
                         </form>
 
-                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#add">Tambah
-                            Barang</button>
+                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#add">Tambah Pelanggan</button>
                     </div>
                 </div>
             </div>
@@ -109,7 +53,7 @@
                         <thead style="background-color: #578FCA; color: white;">
                             <tr>
                                 <th style="min-width: 60px; white-space: nowrap;">No</th>
-                                <th style="min-width: 150px; white-space: nowrap;">Nama Costumer</th>
+                                <th style="min-width: 150px; white-space: nowrap;">Nama Pelangganz</th>
                                 <th style="min-width: 120px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>

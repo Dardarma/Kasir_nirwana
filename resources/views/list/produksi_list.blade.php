@@ -1,50 +1,5 @@
 @extends('layout')
 @section('content')
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <script>
-        
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('success-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-
-        <script>
-            // Auto hide after 2 seconds
-            setTimeout(function() {
-                var alert = document.getElementById('error-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    setTimeout(function() {
-                        alert.style.display = 'none';
-                    }, 150); // Wait for fade transition
-                }
-            }, 2000);
-        </script>
-    @endif
-
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">

@@ -62,7 +62,8 @@ class KasirController extends Controller
             $kode_transaksi = 'KAS' . $tanggal_now . str_pad($jumlah_trasaksi_today + 1, 4, '0', STR_PAD_LEFT);
 
             // Validasi stok sebelum menyimpan
-            foreach ($request->items as $item) {
+            $kebutuhanStok = [];
+            foreach ($request->items as $index => $item) {
                 $barang = Barang::find($item['barang_id']);
                 if (!$barang) {
                     return response()->json([
@@ -71,15 +72,34 @@ class KasirController extends Controller
                     ], 400);
                 }
 
+                $subBarang = sub_barang::where('id', $item['sub_barang_id'])
+                    ->where('barang_id', $item['barang_id'])
+                    ->first();
+
+                if (!$subBarang) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Konversi satuan untuk barang {$barang->nama_barang} tidak valid."
+                    ], 400);
+                }
+
+                $jumlahGram = $item['jumlah'] * $subBarang->gramasi;
+                $kebutuhanStok[$index] = $jumlahGram;
+
                 // Hitung stok saat ini
                 $stok_masuk = DB::table('stok_masuk')->where('barang_id', $item['barang_id'])->sum('qty_masuk');
                 $stok_keluar = DB::table('stok_keluar')->where('barang_id', $item['barang_id'])->sum('qty_keluar');
                 $stok_tersedia = $stok_masuk - $stok_keluar;
 
-                if ($stok_tersedia < $item['jumlah']) {
+                if ($stok_tersedia < $jumlahGram) {
+                    $stokDalamSatuanJual = $stok_tersedia / $subBarang->gramasi;
+                    if (strtolower($subBarang->satuan) === 'pcs') {
+                        $stokDalamSatuanJual = floor($stokDalamSatuanJual);
+                    }
+
                     return response()->json([
                         'status' => 'error',
-                        'message' => "Stok tidak mencukupi untuk barang {$barang->nama_barang}. Stok tersedia: {$stok_tersedia}, diminta: {$item['jumlah']}"
+                        'message' => "Stok tidak mencukupi untuk barang {$barang->nama_barang}. Stok tersedia: {$stokDalamSatuanJual} {$subBarang->satuan}, diminta: {$item['jumlah']} {$subBarang->satuan}"
                     ], 400);
                 }
             }
@@ -97,7 +117,8 @@ class KasirController extends Controller
                 'metode_pembayaran' => $request->metode_pembayaran,
             ]);
 
-            foreach ($request->items as $item) {
+            foreach ($request->items as $index => $item) {
+                $jumlahGram = $kebutuhanStok[$index];
                 $transaksi_detail = Transaksi_detail::create([
                     'transaksi_id' => $transaksi->id,
                     'barang_id' => $item['barang_id'],
@@ -108,13 +129,13 @@ class KasirController extends Controller
                     'subtotal' => $item['sub_total'],
                     'kategori_barang' => 'jadi',
                     'sub_barang_id' => $item['sub_barang_id'],
-                    'jumlah_gram' => $item['jumlah_gram'],
+                    'jumlah_gram' => $jumlahGram,
                 ]);
 
                 Stok_keluar::create([
                     'barang_id' => $item['barang_id'],
                     'transaksi_detail_id' => $transaksi_detail->id,
-                    'qty_keluar' => $item['jumlah_gram'],
+                    'qty_keluar' => $jumlahGram,
                 ]);
             }
 
@@ -181,18 +202,22 @@ class KasirController extends Controller
         try {
             if ($sub_barang_id) {
 
-                $subBarang = sub_barang::select('barang_id', 'gramasi')
+                $subBarang = sub_barang::select('barang_id', 'gramasi', 'satuan')
                     ->where('id', $sub_barang_id)
-                    ->first();
+                    ->firstOrFail();
                 $gramasi = $subBarang->gramasi;
                 $barang_id = $subBarang->barang_id;
-                // dd($gramasi);
                 $stok = get_stok_by_id($barang_id, $gramasi);
+
+                if (strtolower($subBarang->satuan) === 'pcs') {
+                    $stok = floor($stok);
+                }
 
                 return response()->json([
                     'status' => 'success',
                     'barang_id' => $barang_id,
-                    'stok' => $stok
+                    'stok' => $stok,
+                    'satuan' => $subBarang->satuan
                 ]);
             } else {
                 // Get semua stok
@@ -237,11 +262,19 @@ class KasirController extends Controller
     public function editStatusPembayaran(Request $request, $id)
     {
         try {
+            $transaksi = Transaksi::findOrFail($id);
+
+            if ($transaksi->status_pembayaran === 'lunas') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Pembayaran sudah lunas dan tidak dapat diubah.'
+                ], 422);
+            }
+
             $request->validate([
                 'customer_bayar' => 'required|numeric|min:0'
             ]);
 
-            $transaksi = Transaksi::findOrFail($id);
             $transaksi->customer_bayar = $request->input('customer_bayar');
 
 
