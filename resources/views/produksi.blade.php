@@ -2,8 +2,8 @@
 @section('content-header')
 @endsection
 @section('content')
-    <div class="row mb-2">
-        <div class="col-7">
+    <div class="row mb-2 transaction-layout">
+        <div class="col-7 transaction-summary">
             <div class="card mt-1">
                 <div class="card-body">
                     <form method="post" action="{{ route('produksi.store') }}" id="produksi-form">
@@ -42,56 +42,57 @@
                                     </tr>
                                 </tfoot>
                             </table>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-5" style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
-        <h2>Produksi</h2>
-        <div class="" style="margin-top: 50px;">
-            <div class="form-group">
-                <label for="barang">Barang</label>
-                <select class="form-control select2" name="barang" id="barang" required>
-                    <option value="">Pilih Barang</option>
-                    @if ($barang->isEmpty())
-                        <option value="">Tidak ada barang tersedia</option>
-                    @else
-                        @foreach ($barang as $item)
-                            <option value="{{ $item->id }}" data-satuan="{{ $item->satuan }}"
-                                data-harga="{{ $item->harga }}">
-                                {{ $item->nama_barang }}
-                            </option>
-                        @endforeach
-                    @endif
-                </select>
-            </div>
-            <div class="row">
-                <div class="col-9">
-                    <div class="form-group">
-                        <label for="jumlah">Jumlah</label>
-                        <input type="number" class="form-control" name="jumlah" required>
+        <div class="col-5 transaction-entry-panel"
+            style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
+            <h2>Produksi</h2>
+            <div style="margin-top: 50px;">
+                <div class="form-group">
+                    <label for="barang">Barang</label>
+                    <select class="form-control select2" name="barang" id="barang" required>
+                        <option value="">Pilih Barang</option>
+                        @if ($barang->isEmpty())
+                            <option value="">Tidak ada barang tersedia</option>
+                        @else
+                            @foreach ($barang as $item)
+                                <option value="{{ $item->id }}" data-satuan="{{ $item->satuan }}"
+                                    data-harga="{{ $item->harga }}">
+                                    {{ $item->nama_barang }}
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-9">
+                        <div class="form-group">
+                            <label for="jumlah">Jumlah</label>
+                            <input type="number" class="form-control" name="jumlah" required>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label for="satuan">Satuan</label>
+                            <input type="text" class="form-control" id="satuan" name="satuan" readonly required>
+                        </div>
                     </div>
                 </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="satuan">Satuan</label>
-                        <input type="text" class="form-control" id="satuan" name="satuan" readonly required>
-                    </div>
+            </div>
+            <div style="margin-top: 40px">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-primary" id="btn-tambah">Tambah</button>
+                    <a href="{{ url('/produksi/list') }}" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
             </div>
         </div>
-        <div class="" style="margin-top: 40px">
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-primary" id="btn-tambah">Tambah</button>
-                <a href="{{url('/produksi/list')}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
-                <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
-            </div>
-        </div>
     </div>
-    </div>
-    @endsection
-    @section('script')
+@endsection
+@section('script')
     <script>
         // Global variables
         let itemCounter = 1;

@@ -25,10 +25,10 @@
                     <input type="text" class="form-control" name="sub_nama" id="sub_nama" required>
                 </div>
                 <div class="form-group">
-                    <label for="nama">Costumer</label>
-                    <select class="form-control" name="costumer" id="costumer" required>
-                        <option value="">-- Pilih Costumer --</option>
-                        @foreach ($costumer as $item)
+                    <label for="customer">Customer</label>
+                    <select class="form-control" name="customer" id="customer" required>
+                        <option value="">-- Pilih Customer --</option>
+                        @foreach ($customers as $item)
                             <option value="{{ $item->id }}">{{ $item->name }}</option>
                         @endforeach
                     </select>

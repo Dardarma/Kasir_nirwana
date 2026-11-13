@@ -2,8 +2,8 @@
 @section('content-header')
 @endsection
 @section('content')
-    <div class="row mb-2">
-        <div class="col-7">
+    <div class="row mb-2 transaction-layout">
+        <div class="col-7 transaction-summary">
             <div class="card mt-1">
                 <div class="card-header">
                     <h3 class="card-title">Data Pemakaian</h3>
@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-5">
+        <div class="col-5 transaction-entry-panel">
             <div class="card mt-1" style="">
                 <div class="card-header" style="">
                     <h3 class="card-title">Form Pemakaian</h3>

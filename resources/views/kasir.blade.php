@@ -2,8 +2,8 @@
 @section('content-header')
 @endsection
 @section('content')
-    <div class="row mb-2">
-        <div class="col-7">
+    <div class="row mb-2 transaction-layout">
+        <div class="col-7 transaction-summary">
             <div class="card mt-1">
                 <div class="card-body">
                     <table>
@@ -15,10 +15,10 @@
                             <td style="width: 70%">
                                 <select class="form-control" id="customer" name="customer" onchange="updateBarangByCustomer()" required>
                                     <option value="">Pilih Customer</option>
-                                    @if ($costumer->isEmpty())
+                                    @if ($customers->isEmpty())
                                         <option value="">Tidak ada customer tersedia</option>
                                     @else
-                                        @foreach ($costumer as $item)
+                                        @foreach ($customers as $item)
                                             <option value="{{ $item->id }}">{{ $item->name }}</option>
                                         @endforeach
                                     @endif
@@ -108,7 +108,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-5" style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
+        <div class="col-5 transaction-entry-panel" style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
             <h2>Kasir</h2>
             <div class="" style="margin-top: 50px;">
                 <div class="form-group">
@@ -202,7 +202,7 @@
                                 data-satuan="${item.satuan}" 
                                 data-harga="${item.harga}" 
                                 data-id-barang="${item.barang_id}"
-                                data-customer-id="${item.user_id}"
+                                data-customer-id="${item.customer_id}"
                                 data-gramasi="${item.gramasi}"
                                 >
                                 ${item.sub_nama}
@@ -656,12 +656,12 @@
 
                 var tanggal = document.getElementById('tanggal').value;
                 var customerBayar = document.getElementById('customer_bayar').value;
-                var costumer = document.getElementById('customer').value;
+                var customerId = document.getElementById('customer').value;
                 var bayar = document.getElementById('bayar').value;
                 var metodePembayaran = document.getElementById('metode_pembayaran').value;
                 var total = grandTotal;
 
-                if (!costumer) {
+                if (!customerId) {
                     alert('Silakan pilih customer terlebih dahulu!');
                     return;
                 }
@@ -690,7 +690,7 @@
                 let data = {
                     items: item_list,
                     tanggal: tanggal,
-                    costumer: costumer,
+                    customer_id: customerId,
                     total: total,
                     bayar: bayar,
                     metode_pembayaran: metodePembayaran,

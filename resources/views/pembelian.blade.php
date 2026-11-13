@@ -2,8 +2,8 @@
 @section('content-header')
 @endsection
 @section('content')
-    <div class="row mb-2">
-        <div class="col-7">
+    <div class="row mb-2 transaction-layout">
+        <div class="col-7 transaction-summary">
             <div class="card mt-1">
                 <div class="card-body">
                     <table>
@@ -93,7 +93,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-5" style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
+        <div class="col-5 transaction-entry-panel" style="background-color: #E4E4F2; border-radius: 10px; padding: 20px;">
             <h2>Pengeluaran</h2>
             <div class="" style="margin-top: 50px;">
                 <div class="form-group">

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -19,7 +20,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'status'
+        'username',
+        'password',
+        'status',
     ];
 
     /**
@@ -28,11 +31,40 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
+        'password',
         'remember_token',
     ];
 
-    public function sub_barang()
+    protected function casts(): array
     {
-        return $this->hasMany(sub_barang::class);
+        return [
+            'password' => 'hashed',
+        ];
     }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+
+    public function hasRole(string $slug): bool
+    {
+        return $this->roles()
+            ->where('roles.slug', $slug)
+            ->where('roles.is_active', true)
+            ->exists();
+    }
+
+    public function hasPermission(string $slug): bool
+    {
+        if ($this->hasRole('super-admin')) {
+            return true;
+        }
+
+        return $this->roles()
+            ->where('roles.is_active', true)
+            ->whereHas('permissions', fn ($query) => $query->where('permissions.slug', $slug))
+            ->exists();
+    }
+
 }

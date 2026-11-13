@@ -1,0 +1,362 @@
+/* Shared responsive rules for the Nirwana application. */
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.content-wrapper,
+.content,
+.container-fluid,
+.card,
+.card-body {
+    min-width: 0;
+}
+
+.table-responsive,
+.table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive > .table,
+.table-wrapper > .table {
+    margin-bottom: 0;
+}
+
+.content .card-body > table:not(.table) {
+    width: 100%;
+}
+
+.content .card-body > table:not(.table) td {
+    padding: .3rem .25rem;
+    vertical-align: middle;
+}
+
+.card-header .d-flex,
+.modal-footer {
+    gap: .5rem;
+}
+
+nav[aria-label="Pagination Navigation"] {
+    max-width: 100%;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.select2-container,
+.select2-container .selection,
+.select2-container .select2-selection {
+    max-width: 100%;
+}
+
+.select2-dropdown {
+    max-width: calc(100vw - 1rem);
+}
+
+.modal-body {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 991.98px) {
+    .transaction-layout > .col-7,
+    .transaction-layout > .col-5 {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .transaction-layout > .transaction-entry-panel {
+        margin-top: .75rem;
+    }
+
+    .transaction-layout .transaction-entry-panel [style*="margin-top"] {
+        margin-top: 1rem !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --form-control-height: 44px;
+    }
+
+    .content-header {
+        padding: .75rem .25rem .25rem;
+    }
+
+    .content-header h1,
+    .content-header h2 {
+        margin-bottom: .35rem;
+        font-size: 1.45rem;
+    }
+
+    .content .container-fluid {
+        padding-right: .5rem;
+        padding-left: .5rem;
+    }
+
+    .content .container-fluid > .row {
+        margin-right: -.25rem;
+        margin-left: -.25rem;
+    }
+
+    .content .container-fluid > .row > [class*="col-"] {
+        padding-right: .25rem;
+        padding-left: .25rem;
+    }
+
+    .card {
+        margin-bottom: .75rem;
+    }
+
+    .card.mt-4 {
+        margin-top: .5rem !important;
+    }
+
+    .card-header,
+    .card-body,
+    .card-footer {
+        padding: .75rem;
+    }
+
+    .card-header.d-flex,
+    .card-header .row,
+    .card-header .row > [class*="col-"] > .d-flex,
+    .card-header .ml-auto,
+    .card-header form.d-flex,
+    .card-header form.form-inline {
+        align-items: stretch !important;
+        flex-wrap: wrap !important;
+    }
+
+    .card-header.d-flex > .card-title {
+        width: 100%;
+        margin-bottom: .75rem;
+    }
+
+    .card-header .ml-auto,
+    .card-header .row > [class*="col-"],
+    .card-header form,
+    .card-header form.d-flex,
+    .card-header form.form-inline {
+        width: 100%;
+        margin-right: 0 !important;
+    }
+
+    .card-header .justify-content-end,
+    .card-header .justify-content-md-end {
+        justify-content: flex-start !important;
+    }
+
+    .card-header .input-group[style*="width"] {
+        width: 100% !important;
+        min-width: 8rem;
+        margin: .2rem 0 !important;
+    }
+
+    .card-header form .input-group:has(select[name="paginate"]) {
+        flex: 0 0 5rem;
+        width: 5rem !important;
+    }
+
+    .card-header form .input-group:has(input[type="date"]) {
+        flex: 1 1 100%;
+    }
+
+    .card-header .btn,
+    .card-header a.btn {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    input.form-control,
+    select.form-control,
+    select.custom-select,
+    textarea.form-control {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    select.form-control:not([size]):not([multiple]),
+    select.custom-select:not([size]):not([multiple]) {
+        height: 44px;
+    }
+
+    .input-group-sm > .form-control,
+    .input-group-sm > .custom-select,
+    .input-group-sm > .input-group-append > .btn {
+        min-height: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .select2-container .select2-selection--single {
+        min-height: 44px;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        font-size: 16px;
+        line-height: 2;
+    }
+
+    .table-responsive > .table,
+    .table-wrapper > .table,
+    .transaction-layout .table-responsive > .table {
+        min-width: 680px !important;
+    }
+
+    .table th,
+    .table td {
+        padding: .55rem;
+        white-space: nowrap;
+    }
+
+    .table .btn {
+        margin: .1rem 0;
+    }
+
+    .transaction-layout {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .transaction-layout > .col-7,
+    .transaction-layout > .col-5 {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .transaction-layout > .transaction-entry-panel {
+        padding: .9rem !important;
+    }
+
+    .transaction-layout h2 {
+        font-size: 1.5rem;
+    }
+
+    .transaction-layout .justify-content-between {
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .transaction-layout .justify-content-between .btn {
+        flex: 1 1 5.5rem;
+        min-height: 44px;
+    }
+
+    .modal-dialog,
+    .modal-dialog.modal-lg,
+    .modal-dialog.modal-xl {
+        width: auto;
+        max-width: none;
+        margin: .5rem;
+    }
+
+    .modal-content {
+        max-height: calc(100vh - 1rem);
+    }
+
+    .modal-body {
+        overflow-y: auto;
+        padding: .85rem;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 auto;
+        min-height: 42px;
+        margin: 0;
+    }
+
+    .form-row > .form-group[class*="col-md-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .pagination {
+        gap: .25rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination .page-link {
+        min-width: 38px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .4rem .65rem;
+        border-radius: .25rem !important;
+    }
+
+    .swal2-container .swal2-popup,
+    .swal2-container.swal2-top-end .swal2-popup {
+        max-width: calc(100vw - 1rem) !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .navbar-user-name {
+        display: none !important;
+    }
+
+    .main-header .navbar-nav .nav-link {
+        padding-right: .65rem;
+        padding-left: .65rem;
+    }
+
+    .small-box h3 {
+        font-size: 1.65rem;
+    }
+
+    .small-box p {
+        min-height: 2.5rem;
+        line-height: 1.2;
+    }
+
+    .content .card-body > table:not(.table) td:first-child {
+        width: 38% !important;
+    }
+
+    .card-header form .input-group:has(input[type="date"]) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: .25rem;
+    }
+
+    .card-header form .input-group:has(input[type="date"]) > input,
+    .card-header form .input-group:has(input[type="date"]) > span {
+        width: 100%;
+        margin: 0 !important;
+        text-align: center;
+    }
+
+    .transaction-layout .row > .col-9 {
+        flex: 0 0 70%;
+        max-width: 70%;
+    }
+
+    .transaction-layout .row > .col-3 {
+        flex: 0 0 30%;
+        max-width: 30%;
+    }
+}
+
+@media (max-width: 359.98px) {
+    .logout-label {
+        display: none;
+    }
+
+    .small-box .inner {
+        padding: .65rem;
+    }
+}

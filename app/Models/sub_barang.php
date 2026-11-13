@@ -15,8 +15,8 @@ class sub_barang extends Model
         return $this->belongsTo(barang::class);
     }
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 }

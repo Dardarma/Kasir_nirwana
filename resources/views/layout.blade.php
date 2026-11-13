@@ -75,6 +75,7 @@
             white-space: normal;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/app-responsive.css') }}">
     @yield('styles')
 </head>
 
@@ -100,7 +101,17 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-
+                <li class="nav-item d-flex align-items-center mr-2 navbar-user-name">
+                    <span class="text-muted"><i class="fas fa-user mr-1"></i>{{ auth()->user()->name }}</span>
+                </li>
+                <li class="nav-item">
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-link nav-link" title="Keluar">
+                            <i class="fas fa-sign-out-alt"></i> <span class="logout-label">Keluar</span>
+                        </button>
+                    </form>
+                </li>
             </ul>
         </nav>
         <!-- /.navbar -->
@@ -108,7 +119,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a href="index3.html" class="brand-link">
+            <a href="{{ route('home') }}" class="brand-link">
                 <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
                     style="opacity: .8">
                 <span class="brand-text font-weight-light">Nirwana</span>
@@ -140,9 +151,9 @@
                             </a>
                         </li>
                         <li
-                            class="nav-item {{ request()->is('barang', 'sub-barang', 'costumer') ? 'menu-open' : '' }}">
+                            class="nav-item {{ request()->is('barang', 'sub-barang', 'customers*', 'users*', 'roles*', 'permissions*') ? 'menu-open' : '' }}">
                             <a href="#"
-                                class="nav-link {{ request()->is('barang', 'sub-barang', 'costumer') ? 'active' : '' }}">
+                                class="nav-link {{ request()->is('barang', 'sub-barang', 'customers*', 'users*', 'roles*', 'permissions*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>
                                     Master Data
@@ -165,12 +176,37 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ url('/costumer') }}"
-                                        class="nav-link {{ request()->is('costumer') ? 'active' : '' }}">
+                                    <a href="{{ route('customers.index') }}"
+                                        class="nav-link {{ request()->is('customers*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Pelanggan</p>
                                     </a>
                                 </li>
+                                @if (auth()->user()->hasPermission('users.view'))
+                                    <li class="nav-item">
+                                        <a href="{{ route('users.index') }}"
+                                            class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>User</p>
+                                        </a>
+                                    </li>
+                                @endif
+                                @if (auth()->user()->hasPermission('roles.manage'))
+                                    <li class="nav-item">
+                                        <a href="{{ route('roles.index') }}"
+                                            class="nav-link {{ request()->is('roles*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Role & Permission</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('permissions.index') }}"
+                                            class="nav-link {{ request()->is('permissions*') ? 'active' : '' }}">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Pengaturan Permission</p>
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </li>
                         <li

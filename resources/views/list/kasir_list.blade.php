@@ -79,7 +79,7 @@
                                 <tr>
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
                                     <td style="white-space: nowrap;">{{ $item->kode_transaksi }}</td>
-                                    <td style="white-space: nowrap;">{{ $item->customer }}</td>
+                                    <td style="white-space: nowrap;">{{ $item->customerData?->name ?? $item->customer }}</td>
                                     <td style="white-space: nowrap;">{{ $item->tanggal }}</td>
                                     <td
                                         style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">

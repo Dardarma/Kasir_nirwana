@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\sub_barang;
 use App\Models\barang;
-use App\Models\user;
+use App\Models\Customer;
+use Illuminate\Validation\Rule;
 
 
 class ControllerSub_barang extends Controller
@@ -15,28 +15,31 @@ class ControllerSub_barang extends Controller
     {
         $search = $request->input('search');
         $paginate = $request->input('paginate', 10);
-        $costumer = $request->input('costumer');
+        $customerId = $request->input('customer');
 
         $produk = sub_barang::where('status', 'aktif')
             ->when($search, function ($query, $search) {
-                return $query->where('nama_sub_barang', 'like', '%' . $search . '%');
+                return $query->where('sub_nama', 'like', '%' . $search . '%');
             })
-            ->when($costumer, function ($query, $costumer) {
-                return $query->where('costumer_id', $costumer);
+            ->when($customerId, function ($query, $customerId) {
+                return $query->where('customer_id', $customerId);
             })
-            ->with('barang')
-            ->with('user')
+            ->with(['barang', 'customer'])
             ->paginate($paginate);
 
             // dd($produk);
         $barang = barang::select('id', 'nama_barang')
             ->where('status', 'aktif')
-            ->where('sub_kategori', ['barang_jadi', 'produk_jadi'])
+            ->whereIn('sub_kategori', ['barang_jadi', 'produk_jadi'])
             ->get();
 
-        $costumer = user::select('id', 'name')->get();
+        $customers = Customer::query()
+            ->where('status', 'aktif')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        return view('list.Sub_barang_list', compact('produk', 'barang', 'costumer'));
+        return view('list.Sub_barang_list', compact('produk', 'barang', 'customers'));
     }
 
     public function create(Request $request)
@@ -44,7 +47,7 @@ class ControllerSub_barang extends Controller
        $request->validate([
             'barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
-            'costumer' => 'required|exists:users,id',
+            'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
             'satuan' => 'required|in:kg,gram,pcs',
             'gramasi' => 'required|integer|min:1',
             'harga' => 'required|integer|min:0',
@@ -56,7 +59,7 @@ class ControllerSub_barang extends Controller
         $request->validate([
             'barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
-            'costumer' => 'required|exists:users,id',
+            'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
             'satuan' => 'required|in:kg,gram,pcs',
             'gramasi' => 'required|integer|min:1',
             'harga' => 'required|integer|min:0',
@@ -66,7 +69,7 @@ class ControllerSub_barang extends Controller
             sub_barang::create([
                 'barang_id' => $request->barang,
                 'sub_nama' => $request->sub_nama,
-                'user_id' => $request->costumer,
+                'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
                 'gramasi' => $request->gramasi,
                 'harga' => $request->harga,
@@ -84,7 +87,7 @@ class ControllerSub_barang extends Controller
         $request->validate([
             'nama_barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
-            'costumer' => 'required|exists:users,id',
+            'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
             'satuan' => 'required|in:kg,gram,pcs',
             'gramasi' => 'required|integer|min:1',
             'harga' => 'required|integer|min:0',
@@ -95,7 +98,7 @@ class ControllerSub_barang extends Controller
             $subBarang->update([
                 'barang_id' => $request->nama_barang,
                 'sub_nama' => $request->sub_nama,
-                'user_id' => $request->costumer,
+                'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
                 'gramasi' => $request->gramasi,
                 'harga' => $request->harga,

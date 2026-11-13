@@ -11,16 +11,21 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\sub_barang;
-use App\Models\User;
+use App\Models\Customer;
+use Illuminate\Validation\Rule;
 
 class KasirController extends Controller
 {
     public function index()
     {
 
-        $costumer = user::select('id', 'name')->get();
+        $customers = Customer::query()
+            ->where('status', 'aktif')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        return view('kasir', compact('costumer'));
+        return view('kasir', compact('customers'));
     }
 
     public function store(Request $request)
@@ -31,7 +36,10 @@ class KasirController extends Controller
 
             $request->validate([
                 'tanggal' => 'required|date',
-                'costumer' => 'required|string|max:255',
+                'customer_id' => [
+                    'required',
+                    Rule::exists('customers', 'id')->where('status', 'aktif'),
+                ],
                 'total' => 'required|numeric|min:0',
                 'bayar' => 'required|numeric|min:0',
                 'customer_bayar' => 'required|numeric|min:0',
@@ -46,6 +54,8 @@ class KasirController extends Controller
                 'items.*.sub_barang_id' => 'required|exists:sub_barang,id',
                 'items.*.jumlah_gram' => 'required|numeric|min:0',
             ]);
+
+            $customer = Customer::findOrFail($request->customer_id);
 
             $customerBayar = $request->customer_bayar;
             $total = $request->total;
@@ -74,6 +84,7 @@ class KasirController extends Controller
 
                 $subBarang = sub_barang::where('id', $item['sub_barang_id'])
                     ->where('barang_id', $item['barang_id'])
+                    ->where('customer_id', $customer->id)
                     ->first();
 
                 if (!$subBarang) {
@@ -106,7 +117,8 @@ class KasirController extends Controller
 
             $transaksi = Transaksi::create([
                 'tanggal' => $request->tanggal,
-                'customer' => $request->costumer,
+                'customer_id' => $customer->id,
+                'customer' => $customer->name,
                 'status_pembayaran' => $statusPembayaran,
                 'total_bayar' => $request->total,
                 'customer_bayar' => $request->customer_bayar,
@@ -161,13 +173,16 @@ class KasirController extends Controller
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
 
-        $transaksi = Transaksi::with('transaksiDetail')
+        $transaksi = Transaksi::with(['transaksiDetail', 'customerData'])
             ->where('jenis_transaksi', 'penjualan')
             ->where('status', 'aktif')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('kode_transaksi', 'like', '%' . $search . '%')
-                        ->orWhere('customer', 'like', '%' . $search . '%');
+                        ->orWhere('customer', 'like', '%' . $search . '%')
+                        ->orWhereHas('customerData', function ($customerQuery) use ($search) {
+                            $customerQuery->where('name', 'like', '%' . $search . '%');
+                        });
                 });
             })
             ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
@@ -183,7 +198,8 @@ class KasirController extends Controller
     public function getDetail($id)
     {
         try {
-            $transaksi = Transaksi::with('transaksiDetail')->findOrFail($id);
+            $transaksi = Transaksi::with(['transaksiDetail', 'customerData'])->findOrFail($id);
+            $transaksi->customer = $transaksi->customerData?->name ?? $transaksi->customer;
             return response()->json([
                 'status' => 'success',
                 'data' => $transaksi->transaksiDetail,
@@ -239,7 +255,10 @@ class KasirController extends Controller
     {
         try {
             $barang = sub_barang::with('barang')
-                ->where('user_id', $customer_id)
+                ->where('customer_id', $customer_id)
+                ->whereHas('customer', function ($query) {
+                    $query->where('status', 'aktif');
+                })
                 ->whereHas('barang', function ($query) {
                     $query->where('status', 'aktif');
                 })

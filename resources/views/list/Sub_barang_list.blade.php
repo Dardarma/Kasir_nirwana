@@ -24,10 +24,11 @@
                                 </select>
                             </div>
                             <div class="input-group input-group-sm mx-1" style="width: 80px;">
-                                <select class="custom-select" name="costumer" onchange="this.form.submit()">
-                                    @foreach ($costumer as $item)
+                                <select class="custom-select" name="customer" onchange="this.form.submit()">
+                                    <option value="">Semua Customer</option>
+                                    @foreach ($customers as $item)
                                         <option value="{{ $item->id }}"
-                                            {{ request('costumer') == $item->id ? 'selected' : '' }}>{{ $item->name }}
+                                            {{ request('customer') == $item->id ? 'selected' : '' }}>{{ $item->name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -63,7 +64,7 @@
                                 <th style="min-width: 60px; white-space: nowrap;">No</th>
                                 <th style="min-width: 150px; white-space: nowrap;">Nama Barang</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Nama Sub</th>
-                                <th style="min-width: 80px; white-space: nowrap;">Costumer</th>
+                                <th style="min-width: 80px; white-space: nowrap;">Customer</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Harga</th>
                                 <th style="min-width: 80px; white-space: nowrap;">Satuan</th>
                                 <th style="min-width: 120px; white-space: nowrap;">Gramasi</th>
@@ -82,7 +83,7 @@
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
                                     <td style="white-space: nowrap;">{{ $item->barang->nama_barang }}</td>
                                     <td style="white-space: nowrap;">{{ $item->sub_nama }}</td>
-                                    <td style="white-space: nowrap;">{{ $item->user->name }}</td>
+                                    <td style="white-space: nowrap;">{{ $item->customer?->name ?? '-' }}</td>
                                     <td style="white-space: nowrap;">{{ format_rupiah($item->harga) }} </td>
                                     <td style="white-space: nowrap;">{{ $item->satuan }}</td>
                                     <td
@@ -93,7 +94,7 @@
                                             data-id = "{{ $item->id }}" data-barang-id = "{{ $item->barang_id }}"
                                             data-nama-barang = "{{ $item->barang->nama_barang }}"
                                             data-sub-nama = "{{ $item->sub_nama }}"
-                                            data-costumer-id = "{{ $item->user_id }}"
+                                            data-customer-id = "{{ $item->customer_id }}"
                                             data-harga = "{{ $item->harga }}" data-satuan = "{{ $item->satuan }}"
                                             data-gramasi = "{{ $item->gramasi }}"><small>Edit</small></a>
                                         <a class="btn btn-danger btn-sm btn-delete" data-toggle="modal"
@@ -219,7 +220,7 @@
                 var id = $(this).data('id');
                 var barang_id = $(this).data('barang-id');
                 var sub_nama = $(this).data('sub-nama');
-                var costumer_id = $(this).data('costumer-id');
+                var customer_id = $(this).data('customer-id');
                 var satuan = $(this).data('satuan');
                 var gramasi = $(this).data('gramasi');
                 var harga = $(this).data('harga');
@@ -228,7 +229,7 @@
                     id: id,
                     barang_id: barang_id,
                     sub_nama: sub_nama,
-                    costumer_id: costumer_id,
+                    customer_id: customer_id,
                     satuan: satuan,
                     gramasi: gramasi,
                     harga: harga
@@ -237,7 +238,7 @@
                 // Set values to existing form fields dengan ID asli
                 $('#nama_barang').val(barang_id);
                 $('#sub_nama').val(sub_nama); // Nama sub barang
-                $('#costumer').val(costumer_id);
+                $('#customer').val(customer_id);
                 $('#satuan').val(satuan); // Set satuan
                 $('#gramasi').val(gramasi);
                 $('#harga').val(harga);
