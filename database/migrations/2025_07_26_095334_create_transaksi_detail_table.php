@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaksi_id')->constrained('transaksi')->onDelete('cascade');
             $table->foreignId('barang_id')->constrained('barang')->onDelete('cascade');
-            $table->integer('jumlah');
-            $table->integer('jumlah_gram');
+            $table->foreignId('sub_barang_id')->nullable()->constrained('sub_barang')->nullOnDelete();
+            $table->decimal('jumlah', 20, 2);
+            $table->decimal('jumlah_gram', 20, 2);
+            $table->decimal('faktor_satuan', 15, 6)->nullable();
+            $table->string('satuan_stok', 50)->nullable();
             $table->integer('keterangan')->nullable();
-            $table->integer('subtotal')->nullable();
+            $table->bigInteger('subtotal')->nullable();
             $table->string('nama_barang');
             $table->string('satuan');
             $table->string('kategori_barang');

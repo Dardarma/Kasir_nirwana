@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaksi_detail_id')->constrained('transaksi_detail')->onDelete('cascade');
             $table->foreignId('barang_id')->constrained('barang')->onDelete('cascade');
-            $table->integer('qty_keluar');
+            $table->decimal('qty_keluar', 20, 2);
             $table->timestamps();
         });
     }

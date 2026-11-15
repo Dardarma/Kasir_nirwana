@@ -44,4 +44,25 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_login_shows_remaining_lockout_time_after_five_failed_attempts(): void
+    {
+        $this->freezeTime();
+
+        $credentials = ['username' => 'locked-user', 'password' => 'wrong-password'];
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->from(route('login'))
+                ->post(route('login.store'), $credentials)
+                ->assertRedirect(route('login'));
+        }
+
+        $this->travel(10)->seconds();
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('<span id="login-retry-seconds">50</span>', false);
+
+        $this->assertGuest();
+    }
 }

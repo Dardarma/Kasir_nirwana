@@ -20,7 +20,12 @@
             <div class="card-body login-card-body">
                 <p class="login-box-msg">Masuk untuk mengakses aplikasi</p>
 
-                @if ($errors->any())
+                @if ($retryAfter > 0)
+                    <div id="login-lockout" class="alert alert-danger py-2">
+                        Terlalu banyak percobaan login. Coba lagi dalam
+                        <span id="login-retry-seconds">{{ $retryAfter }}</span> detik.
+                    </div>
+                @elseif ($errors->any())
                     <div class="alert alert-danger py-2">
                         {{ $errors->first() }}
                     </div>
@@ -36,10 +41,13 @@
                         </div>
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" name="password" class="form-control" placeholder="Password"
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Password"
                             autocomplete="current-password" required>
                         <div class="input-group-append">
-                            <div class="input-group-text"><span class="fas fa-lock"></span></div>
+                            <button type="button" id="toggle-password" class="btn btn-outline-secondary"
+                                aria-controls="password" aria-label="Tampilkan password" title="Tampilkan password" hidden>
+                                <span class="fas fa-eye" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
                     <div class="row">
@@ -57,6 +65,41 @@
             </div>
         </div>
     </div>
+    <script>
+        const password = document.getElementById('password');
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordIcon = togglePassword.querySelector('span');
+
+        togglePassword.addEventListener('click', () => {
+            const showPassword = password.type === 'password';
+            const label = showPassword ? 'Sembunyikan password' : 'Tampilkan password';
+
+            password.type = showPassword ? 'text' : 'password';
+            togglePassword.setAttribute('aria-label', label);
+            togglePassword.title = label;
+            passwordIcon.classList.toggle('fa-eye', !showPassword);
+            passwordIcon.classList.toggle('fa-eye-slash', showPassword);
+        });
+
+        togglePassword.hidden = false;
+
+        const retrySeconds = document.getElementById('login-retry-seconds');
+
+        if (retrySeconds) {
+            const deadline = Date.now() + Number(retrySeconds.textContent) * 1000;
+            const timer = window.setInterval(() => {
+                const remaining = Math.ceil((deadline - Date.now()) / 1000);
+
+                if (remaining <= 0) {
+                    window.clearInterval(timer);
+                    document.getElementById('login-lockout').remove();
+                    return;
+                }
+
+                retrySeconds.textContent = remaining;
+            }, 250);
+        }
+    </script>
 </body>
 
 </html>

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,6 +54,15 @@ class CustomerManagementTest extends TestCase
             'name' => 'Customer Relasi',
             'status' => 'aktif',
         ]);
+
+        $this->actingAs($user)
+            ->delete(route('customers.destroy', $customer))
+            ->assertForbidden();
+
+        $role = Role::create(['name' => 'Kelola Customer', 'slug' => 'kelola-customer', 'is_active' => true]);
+        $permission = Permission::create(['name' => 'Nonaktifkan Customer', 'slug' => 'customers.delete']);
+        $role->permissions()->attach($permission);
+        $user->roles()->attach($role);
 
         $this->actingAs($user)
             ->delete(route('customers.destroy', $customer))

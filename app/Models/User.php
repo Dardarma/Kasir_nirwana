@@ -61,6 +61,10 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($slug === 'roles.manage') {
+            return false;
+        }
+
         return $this->roles()
             ->where('roles.is_active', true)
             ->whereHas('permissions', fn ($query) => $query->where('permissions.slug', $slug))

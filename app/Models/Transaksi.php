@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Transaksi extends Model
 {
@@ -12,6 +13,11 @@ class Transaksi extends Model
     protected $guarded = ['id'];
 
 
+
+    public static function generateCode(string $prefix): string
+    {
+        return $prefix . now()->format('Ymd') . Str::ulid();
+    }
 
     public function transaksi_detail()
     {

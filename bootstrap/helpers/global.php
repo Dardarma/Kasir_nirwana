@@ -3,6 +3,11 @@
 use App\Models\Barang;
 use Illuminate\Support\Facades\DB;
 
+function format_jumlah($jumlah): string
+{
+    return rtrim(rtrim(number_format((float) $jumlah, 2, ',', '.'), '0'), ',');
+}
+
 if (!function_exists('format_rupiah')) {
     function format_rupiah($angka)
     {

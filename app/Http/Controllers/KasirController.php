@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ConfirmTransactionDeletion;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Models\Barang;
 use App\Models\Transaksi;
 use App\Models\Transaksi_detail;
 use App\Models\Stok_keluar;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\sub_barang;
 use App\Models\Customer;
+use App\Models\Satuan;
 use Illuminate\Validation\Rule;
 
 class KasirController extends Controller
@@ -25,143 +27,154 @@ class KasirController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('kasir', compact('customers'));
+        return view('kasir.index', compact('customers'));
     }
 
     public function store(Request $request)
     {
         try {
-            // Debug: Log data yang diterima
-            Log::info('Request data received:', $request->all());
-
             $request->validate([
                 'tanggal' => 'required|date',
                 'customer_id' => [
                     'required',
                     Rule::exists('customers', 'id')->where('status', 'aktif'),
                 ],
-                'total' => 'required|numeric|min:0',
                 'bayar' => 'required|numeric|min:0',
                 'customer_bayar' => 'required|numeric|min:0',
                 'items' => 'required|array',
                 'metode_pembayaran' => 'required|in:tunai,transfer,qris',
                 'items.*.barang_id' => 'required|exists:barang,id',
                 'items.*.nama_barang' => 'required|string|max:255',
-                'items.*.jumlah' => 'required|numeric|min:1',
-                'items.*.satuan' => 'required|string|max:50',
-                'items.*.harga' => 'required|numeric|min:0',
-                'items.*.sub_total' => 'required|numeric|min:0',
+                'items.*.jumlah' => 'required|numeric|min:0.01|decimal:0,2|max:999999999',
                 'items.*.sub_barang_id' => 'required|exists:sub_barang,id',
                 'items.*.jumlah_gram' => 'required|numeric|min:0',
-            ]);
+            ], ['items.*.jumlah.decimal' => 'Jumlah maksimal dua angka desimal. Pilih satuan yang lebih kecil bila diperlukan.', 'items.*.jumlah.min' => 'Jumlah minimal 0,01. Pilih satuan yang lebih kecil bila diperlukan.']);
 
             $customer = Customer::findOrFail($request->customer_id);
 
             $customerBayar = $request->customer_bayar;
-            $total = $request->total;
-            $statusPembayaran = ($customerBayar >= $total) ? 'lunas' : 'belum_lunas';
+            $total = 0;
 
-            if ($statusPembayaran === 'lunas') {
-                $tanggal_pembayaran = Carbon::now()->format('Y-m-d');
-            } else {
-                $tanggal_pembayaran = null; 
-            }
+            $kode_transaksi = Transaksi::generateCode('KAS');
 
-            $tanggal_now = Carbon::now()->format('Ymd');
-            $jumlah_trasaksi_today = Transaksi::whereDate('created_at', Carbon::today())->count();
-            $kode_transaksi = 'KAS' . $tanggal_now . str_pad($jumlah_trasaksi_today + 1, 4, '0', STR_PAD_LEFT);
+            return DB::transaction(function () use ($request, $customer, $kode_transaksi, $customerBayar, $total) {
+                $barangIds = collect($request->items)->pluck('barang_id')->unique();
+                $barangTerkunci = Barang::whereIn('id', $barangIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                $stokTerpakai = [];
+                $conversions = Satuan::konversiStok();
 
-            // Validasi stok sebelum menyimpan
-            $kebutuhanStok = [];
-            foreach ($request->items as $index => $item) {
-                $barang = Barang::find($item['barang_id']);
-                if (!$barang) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Barang dengan ID ' . $item['barang_id'] . ' tidak ditemukan'
-                    ], 400);
-                }
-
-                $subBarang = sub_barang::where('id', $item['sub_barang_id'])
-                    ->where('barang_id', $item['barang_id'])
-                    ->where('customer_id', $customer->id)
-                    ->first();
-
-                if (!$subBarang) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => "Konversi satuan untuk barang {$barang->nama_barang} tidak valid."
-                    ], 400);
-                }
-
-                $jumlahGram = $item['jumlah'] * $subBarang->gramasi;
-                $kebutuhanStok[$index] = $jumlahGram;
-
-                // Hitung stok saat ini
-                $stok_masuk = DB::table('stok_masuk')->where('barang_id', $item['barang_id'])->sum('qty_masuk');
-                $stok_keluar = DB::table('stok_keluar')->where('barang_id', $item['barang_id'])->sum('qty_keluar');
-                $stok_tersedia = $stok_masuk - $stok_keluar;
-
-                if ($stok_tersedia < $jumlahGram) {
-                    $stokDalamSatuanJual = $stok_tersedia / $subBarang->gramasi;
-                    if (strtolower($subBarang->satuan) === 'pcs') {
-                        $stokDalamSatuanJual = floor($stokDalamSatuanJual);
+                // Validasi stok sebelum menyimpan
+                $items = $request->items;
+                foreach ($items as $index => $item) {
+                    $barang = $barangTerkunci->get($item['barang_id']);
+                    if (!$barang) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Barang dengan ID ' . $item['barang_id'] . ' tidak ditemukan'
+                        ], 400);
                     }
 
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => "Stok tidak mencukupi untuk barang {$barang->nama_barang}. Stok tersedia: {$stokDalamSatuanJual} {$subBarang->satuan}, diminta: {$item['jumlah']} {$subBarang->satuan}"
-                    ], 400);
+                    $subBarang = sub_barang::where('id', $item['sub_barang_id'])
+                        ->where('barang_id', $item['barang_id'])
+                        ->where('customer_id', $customer->id)
+                        ->where('status', 'aktif')
+                        ->first();
+
+                    $conversion = $conversions[$subBarang?->satuan] ?? null;
+                    $base = $conversions[$barang->satuan]['dasar'] ?? null;
+                    $factor = $conversion && $conversion['dasar'] === $base ? $conversion['faktor'] : 0;
+                    if (!$subBarang || $barang->status !== 'aktif' || $factor <= 0) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => "Konversi satuan untuk barang {$barang->nama_barang} tidak valid."
+                        ], 400);
+                    }
+
+                    $jumlahGram = round($item['jumlah'] * $factor, 2);
+                    if ($jumlahGram <= 0 || $jumlahGram >= 1e14) {
+                        return response()->json(['status' => 'error', 'message' => 'Jumlah penjualan tidak valid.'], 422);
+                    }
+                    $items[$index]['satuan'] = $subBarang->satuan;
+                    $items[$index]['faktor_satuan'] = $factor;
+                    $items[$index]['satuan_stok'] = $base;
+                    $items[$index]['jumlah_gram'] = $jumlahGram;
+                    $items[$index]['harga'] = $subBarang->harga;
+                    $items[$index]['sub_total'] = $item['jumlah'] * $subBarang->harga;
+                    $total += $items[$index]['sub_total'];
+
+                    // Hitung stok saat ini
+                    $stok_masuk = DB::table('stok_masuk')->where('barang_id', $item['barang_id'])->sum('qty_masuk');
+                    $stok_keluar = DB::table('stok_keluar')->where('barang_id', $item['barang_id'])->sum('qty_keluar');
+                    $stok_tersedia = round($stok_masuk - $stok_keluar - ($stokTerpakai[$barang->id] ?? 0), 2);
+
+                    if ($stok_tersedia < $jumlahGram) {
+                        $stokDalamSatuanJual = format_jumlah($stok_tersedia / $factor);
+                        $jumlahDiminta = format_jumlah($item['jumlah']);
+
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => "Stok tidak mencukupi untuk barang {$barang->nama_barang}. Stok tersedia: {$stokDalamSatuanJual} {$subBarang->satuan}, diminta: {$jumlahDiminta} {$subBarang->satuan}"
+                        ], 400);
+                    }
+                    $stokTerpakai[$barang->id] = ($stokTerpakai[$barang->id] ?? 0) + $jumlahGram;
                 }
-            }
 
-            $transaksi = Transaksi::create([
-                'tanggal' => $request->tanggal,
-                'customer_id' => $customer->id,
-                'customer' => $customer->name,
-                'status_pembayaran' => $statusPembayaran,
-                'total_bayar' => $request->total,
-                'customer_bayar' => $request->customer_bayar,
-                'kode_transaksi' => $kode_transaksi,
-                'jenis_transaksi' => 'penjualan',
-                'tanggal_pembayaran' => $tanggal_pembayaran,
-                'status' => 'aktif',
-                'metode_pembayaran' => $request->metode_pembayaran,
-            ]);
+                $statusPembayaran = $customerBayar >= $total ? 'lunas' : 'belum_lunas';
+                $tanggal_pembayaran = $statusPembayaran === 'lunas' ? Carbon::now()->toDateString() : null;
 
-            foreach ($request->items as $index => $item) {
-                $jumlahGram = $kebutuhanStok[$index];
-                $transaksi_detail = Transaksi_detail::create([
-                    'transaksi_id' => $transaksi->id,
-                    'barang_id' => $item['barang_id'],
-                    'jumlah' => $item['jumlah'],
-                    'satuan' => $item['satuan'],
-                    'nama_barang' => $item['nama_barang'],
-                    'harga_satuan' => $item['harga'],
-                    'subtotal' => $item['sub_total'],
-                    'kategori_barang' => 'jadi',
-                    'sub_barang_id' => $item['sub_barang_id'],
-                    'jumlah_gram' => $jumlahGram,
+                $transaksi = Transaksi::create([
+                    'tanggal' => $request->tanggal,
+                    'customer_id' => $customer->id,
+                    'customer' => $customer->name,
+                    'status_pembayaran' => $statusPembayaran,
+                    'total_bayar' => $total,
+                    'customer_bayar' => $request->customer_bayar,
+                    'kode_transaksi' => $kode_transaksi,
+                    'jenis_transaksi' => 'penjualan',
+                    'tanggal_pembayaran' => $tanggal_pembayaran,
+                    'status' => 'aktif',
+                    'metode_pembayaran' => $request->metode_pembayaran,
                 ]);
 
-                Stok_keluar::create([
-                    'barang_id' => $item['barang_id'],
-                    'transaksi_detail_id' => $transaksi_detail->id,
-                    'qty_keluar' => $jumlahGram,
-                ]);
-            }
+                foreach ($items as $item) {
+                    $jumlahGram = $item['jumlah_gram'];
+                    $transaksi_detail = Transaksi_detail::create([
+                        'transaksi_id' => $transaksi->id,
+                        'barang_id' => $item['barang_id'],
+                        'jumlah' => $item['jumlah'],
+                        'satuan' => $item['satuan'],
+                        'nama_barang' => $item['nama_barang'],
+                        'harga_satuan' => $item['harga'],
+                        'subtotal' => $item['sub_total'],
+                        'kategori_barang' => 'jadi',
+                        'sub_barang_id' => $item['sub_barang_id'],
+                        'jumlah_gram' => $jumlahGram,
+                        'faktor_satuan' => $item['faktor_satuan'],
+                        'satuan_stok' => $item['satuan_stok'],
+                    ]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data kasir berhasil disimpan',
-                'kode_transaksi' => $kode_transaksi,
-                'status_pembayaran' => $statusPembayaran,
-                'total_items' => count($request->items)
-            ]);
+                    Stok_keluar::create([
+                        'barang_id' => $item['barang_id'],
+                        'transaksi_detail_id' => $transaksi_detail->id,
+                        'qty_keluar' => $jumlahGram,
+                    ]);
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Data kasir berhasil disimpan',
+                    'kode_transaksi' => $kode_transaksi,
+                    'status_pembayaran' => $statusPembayaran,
+                    'total_items' => count($request->items)
+                ]);
+            });
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal menyimpan data kasir: ' . $e->getMessage()
+                'message' => 'Gagal menyimpan data kasir'
             ], 400);
         }
     }
@@ -191,14 +204,16 @@ class KasirController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($paginate);
 
-        return view('list.kasir_list', compact('transaksi'));
+        return view('kasir.history', compact('transaksi'));
     }
 
 
     public function getDetail($id)
     {
+        $transaksi = Transaksi::with(['transaksiDetail', 'customerData'])
+            ->where('jenis_transaksi', 'penjualan')->findOrFail($id);
+
         try {
-            $transaksi = Transaksi::with(['transaksiDetail', 'customerData'])->findOrFail($id);
             $transaksi->customer = $transaksi->customerData?->name ?? $transaksi->customer;
             return response()->json([
                 'status' => 'success',
@@ -206,9 +221,10 @@ class KasirController extends Controller
                 'transaksi' => $transaksi
             ]);
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil detail transaksi: ' . $e->getMessage()
+                'message' => 'Gagal mengambil detail transaksi'
             ], 500);
         }
     }
@@ -218,16 +234,19 @@ class KasirController extends Controller
         try {
             if ($sub_barang_id) {
 
-                $subBarang = sub_barang::select('barang_id', 'gramasi', 'satuan')
+                $subBarang = sub_barang::with('barang')->select('barang_id', 'satuan')
                     ->where('id', $sub_barang_id)
                     ->firstOrFail();
-                $gramasi = $subBarang->gramasi;
-                $barang_id = $subBarang->barang_id;
-                $stok = get_stok_by_id($barang_id, $gramasi);
-
-                if (strtolower($subBarang->satuan) === 'pcs') {
-                    $stok = floor($stok);
+                [$base, $factor] = Satuan::dasarStok($subBarang->satuan);
+                if ($base !== Satuan::dasarStok($subBarang->barang->satuan)[0] || $factor <= 0) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Konversi satuan barang tidak valid.',
+                    ], 422);
                 }
+
+                $barang_id = $subBarang->barang_id;
+                $stok = get_stok_by_id($barang_id, $factor);
 
                 return response()->json([
                     'status' => 'success',
@@ -244,9 +263,10 @@ class KasirController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data stok: ' . $e->getMessage()
+                'message' => 'Gagal mengambil data stok'
             ], 500);
         }
     }
@@ -254,6 +274,7 @@ class KasirController extends Controller
     public function getBarangByCustomer($customer_id)
     {
         try {
+            $conversions = Satuan::konversiStok();
             $barang = sub_barang::with('barang')
                 ->where('customer_id', $customer_id)
                 ->whereHas('customer', function ($query) {
@@ -263,7 +284,14 @@ class KasirController extends Controller
                     $query->where('status', 'aktif');
                 })
                 ->where('status', 'aktif')
-                ->get();
+                ->get()
+                ->filter(fn ($item) => isset($conversions[$item->satuan], $conversions[$item->barang->satuan])
+                    && $conversions[$item->satuan]['dasar'] === $conversions[$item->barang->satuan]['dasar'])
+                ->values();
+
+            foreach ($barang as $item) {
+                $item->faktor_satuan = $conversions[$item->satuan]['faktor'];
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -271,77 +299,91 @@ class KasirController extends Controller
                 'message' => 'Data barang berhasil dimuat'
             ]);
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengambil data barang: ' . $e->getMessage()
+                'message' => 'Gagal mengambil data barang'
             ], 500);
         }
     }
 
     public function editStatusPembayaran(Request $request, $id)
     {
+        $transaksi = Transaksi::where('jenis_transaksi', 'penjualan')->findOrFail($id);
+
         try {
-            $transaksi = Transaksi::findOrFail($id);
+            return DB::transaction(function () use ($request, $transaksi) {
+                $transaksi = Transaksi::lockForUpdate()->findOrFail($transaksi->id);
+                if ($transaksi->status !== 'aktif') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Pembayaran transaksi yang dibatalkan tidak dapat diubah.',
+                    ], 422);
+                }
 
-            if ($transaksi->status_pembayaran === 'lunas') {
+                if ($transaksi->status_pembayaran === 'lunas') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Pembayaran sudah lunas dan tidak dapat diubah.'
+                    ], 422);
+                }
+
+                $request->validate([
+                    'customer_bayar' => 'required|numeric|min:0'
+                ]);
+
+                $transaksi->customer_bayar = $request->input('customer_bayar');
+
+                // Update status berdasarkan logic pembayaran
+                if ($transaksi->customer_bayar >= $transaksi->total_bayar) {
+                    $transaksi->status_pembayaran = 'lunas';
+                    $transaksi->tanggal_pembayaran = Carbon::now()->format('Y-m-d');
+                } else {
+                    $transaksi->status_pembayaran = 'belum_lunas';
+                }
+
+                $transaksi->save();
+
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Pembayaran sudah lunas dan tidak dapat diubah.'
-                ], 422);
-            }
-
-            $request->validate([
-                'customer_bayar' => 'required|numeric|min:0'
-            ]);
-
-            $transaksi->customer_bayar = $request->input('customer_bayar');
-
-
-
-            // Update status berdasarkan logic pembayaran
-            if ($transaksi->customer_bayar >= $transaksi->total_bayar) {
-                $transaksi->status_pembayaran = 'lunas';
-                $transaksi->tanggal_pembayaran = Carbon::now()->format('Y-m-d');
-            } else {
-                $transaksi->status_pembayaran = 'belum_lunas';
-            }
-
-            $transaksi->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pembayaran berhasil diupdate',
-                'data' => [
-                    'customer_bayar' => $transaksi->customer_bayar,
-                    'status_pembayaran' => $transaksi->status_pembayaran,
-                    'kembalian' => max(0, $transaksi->customer_bayar - $transaksi->total_bayar)
-                ]
-            ]);
+                    'status' => 'success',
+                    'message' => 'Pembayaran berhasil diupdate',
+                    'data' => [
+                        'customer_bayar' => $transaksi->customer_bayar,
+                        'status_pembayaran' => $transaksi->status_pembayaran,
+                        'kembalian' => max(0, $transaksi->customer_bayar - $transaksi->total_bayar)
+                    ]
+                ]);
+            });
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengupdate status pembayaran: ' . $e->getMessage()
+                'message' => 'Gagal mengupdate status pembayaran'
             ], 500);
         }
     }
 
-    public function destroy($id)
+    public function destroy(ConfirmTransactionDeletion $request, $id)
     {
+        $transaksi = Transaksi::where('jenis_transaksi', 'penjualan')->findOrFail($id);
+
         try {
-            $transaksi = Transaksi::with('transaksiDetail')->findOrFail($id);
 
-            // Soft delete dengan mengubah status
-            $transaksi->status = 'dibatalkan';
-            $transaksi->save();
+            DB::transaction(function () use ($transaksi) {
+                $transaksi = Transaksi::lockForUpdate()->findOrFail($transaksi->id);
+                $barangIds = $transaksi->transaksiDetail()->lockForUpdate()->pluck('barang_id');
+                Barang::whereIn('id', $barangIds)->orderBy('id')->lockForUpdate()->get();
 
-            // Hapus stok keluar yang terkait untuk mengembalikan stok
-            foreach ($transaksi->transaksiDetail as $detail) {
-                Stok_keluar::where('transaksi_detail_id', $detail->id)->delete();
-            }
+                Stok_keluar::whereIn('transaksi_detail_id', $transaksi->transaksiDetail()->select('id'))->delete();
+                $transaksi->update(['status' => 'dibatalkan']);
+            });
 
             return redirect()->back()->with('success', 'Transaksi ' . $transaksi->kode_transaksi . ' berhasil dihapus dan stok dikembalikan');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'Gagal menghapus transaksi');
         }
     }
 }

@@ -14,15 +14,16 @@ return new class extends Migration
         Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
             $table->date('tanggal');
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->string('customer')->nullable();
             $table->string('kode_transaksi')->unique();
             $table->enum('status',['aktif','dibatalkan']);
             $table->enum('status_pembayaran',['lunas','belum_lunas'])->nullable();
-            $table->integer('customer_bayar')->nullable();
+            $table->bigInteger('customer_bayar')->nullable();
             $table->enum('metode_pembayaran',['tunai','transfer','qris'])->nullable();
             $table->date('tanggal_pembayaran')->nullable();
             $table->enum('jenis_transaksi',['pembelian','penjualan','produksi','pemakaian']);
-            $table->integer('total_bayar')->nullable();
+            $table->bigInteger('total_bayar')->nullable();
             $table->timestamps();
         });
     }

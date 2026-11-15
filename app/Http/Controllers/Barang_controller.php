@@ -23,52 +23,62 @@ class Barang_controller extends Controller
         ->where('status','aktif')
         ->paginate($paginate);
 
-        return view('list.Barang_list', compact('barang'));
+        return view('barang.index', ['barang' => $barang, 'satuanList' => \App\Models\Satuan::orderBy('nama')->pluck('nama')]);
     }
 
     public function store(Request $request)
     {
-        // Debug: Log data yang diterima
-        Log::info('Data received:', $request->all());
-        
-        $request->validate([
+        $validated = $request->validate([
             'nama_barang' => 'required|string|max:255',
-            'satuan' => 'required|string|max:50',
-            'kategori' => 'required|string|max:50',
+            'satuan' => 'required|exists:satuan,nama',
+            'kategori' => 'required|in:jadi,produksi',
             'sub_kategori' => 'nullable|string|max:50',
             'harga' => 'required|numeric|min:0',
         ]);
 
+        if ($validated['kategori'] === 'jadi') {
+            $validated['sub_kategori'] = 'barang_jadi';
+        }
+
         try {
-            $barang = Barang::create($request->all());
+            $barang = Barang::create($validated);
             $barang->status = 'aktif'; 
             $barang->save();
             Log::info('Barang created:', $barang->toArray());
             return redirect('/barang')->with('success', 'Barang berhasil ditambahkan.');
         } catch (\Exception $e) {
             Log::error('Error creating barang:', ['error' => $e->getMessage()]);
-            return redirect('/barang')->with('error', 'Gagal menambahkan barang: ' . $e->getMessage());
+            return redirect('/barang')->with('error', 'Gagal menambahkan barang');
         }
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama_barang' => 'required|string|max:255',
-            'satuan' => 'required|string|max:50',
-            'kategori' => 'required|string|max:50',
+            'satuan' => 'required|exists:satuan,nama',
+            'kategori' => 'required|in:jadi,produksi',
             'sub_kategori' => 'nullable|string|max:50',
             'harga' => 'required|numeric|min:0',
         ]);
 
+        if ($validated['kategori'] === 'jadi') {
+            $validated['sub_kategori'] = 'barang_jadi';
+        }
+
+        $barang = Barang::findOrFail($id);
+        if (($barang->kategori !== $validated['kategori'] || $barang->satuan !== $validated['satuan'])
+            && \App\Models\Transaksi_detail::where('barang_id', $barang->id)->exists()) {
+            return back()->withErrors(['satuan' => 'Kategori dan satuan barang yang sudah memiliki transaksi tidak dapat diubah.']);
+        }
+
         try {
-            $barang = Barang::findOrFail($id);
-            $barang->update($request->all());
+            $barang->update($validated);
             Log::info('Barang updated:', $barang->toArray());
             return redirect('/barang')->with('success', 'Barang berhasil diperbarui.');
         } catch (\Exception $e) {
             Log::error('Error updating barang:', ['error' => $e->getMessage()]);
-            return redirect('/barang')->with('error', 'Gagal memperbarui barang: ' . $e->getMessage());
+            return redirect('/barang')->with('error', 'Gagal memperbarui barang');
         }
     }
 
@@ -76,12 +86,12 @@ class Barang_controller extends Controller
     {
         try{
             $barang = Barang::findOrFail($id);
-            $barang->status = 'non_aktif';
+            $barang->status = 'nonaktif';
             $barang->save();
             return redirect('/barang')->with('success', 'Barang berhasil dihapus.');
         } catch (\Exception $e) {
             Log::error('Error deleting barang:', ['error' => $e->getMessage()]);
-            return redirect('/barang')->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
+            return redirect('/barang')->with('error', 'Gagal menghapus barang');
         }
     }
 }

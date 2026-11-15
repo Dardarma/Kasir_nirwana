@@ -12,9 +12,19 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('auth.login');
+        $username = $request->old('username');
+        $retryAfter = 0;
+
+        if (is_string($username)) {
+            $throttleKey = $this->throttleKey($request, $username);
+            if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+                $retryAfter = RateLimiter::availableIn($throttleKey);
+            }
+        }
+
+        return view('auth.login', compact('retryAfter'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -24,7 +34,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = Str::lower($credentials['username']).'|'.$request->ip();
+        $throttleKey = $this->throttleKey($request, $credentials['username']);
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             throw ValidationException::withMessages([
@@ -60,5 +70,10 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function throttleKey(Request $request, string $username): string
+    {
+        return Str::lower($username).'|'.$request->ip();
     }
 }

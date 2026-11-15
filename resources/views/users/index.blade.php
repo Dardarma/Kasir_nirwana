@@ -1,6 +1,10 @@
-@extends('layout')
+@extends('layouts.app')
 
 @section('content')
+    @php
+        $canEditUsers = auth()->user()->hasPermission('users.update');
+        $isSuperAdmin = auth()->user()->hasRole('super-admin');
+    @endphp
     <div class="card">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title">Manajemen User</h3>
@@ -36,6 +40,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $user)
+                        @php($isProtectedAccount = ! $isSuperAdmin && $user->roles->contains('slug', 'super-admin'))
                         <tr>
                             <td>{{ $users->firstItem() + $loop->index }}</td>
                             <td>{{ $user->name }}</td>
@@ -53,13 +58,23 @@
                                 </span>
                             </td>
                             <td>
-                                @if (auth()->user()->hasPermission('users.update'))
-                                    <button class="btn btn-warning btn-sm" data-toggle="modal"
-                                        data-target="#edit-user-{{ $user->id }}">
+                                @if ($canEditUsers)
+                                    <button type="button" class="btn btn-warning btn-sm"
+                                        @if ($isProtectedAccount)
+                                            disabled title="Hanya Super Admin yang bisa mengedit akun ini"
+                                        @else
+                                            data-toggle="modal" data-target="#edit-user-{{ $user->id }}"
+                                        @endif>
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
                                 @endif
                                 @if (auth()->user()->hasPermission('users.delete') && ! auth()->user()->is($user) && $user->status === 'aktif')
+                                    @if ($isProtectedAccount)
+                                        <button class="btn btn-danger btn-sm" type="button" disabled
+                                            title="Hanya Super Admin yang bisa menonaktifkan akun ini" aria-label="Nonaktifkan">
+                                            <i class="fas fa-user-slash" aria-hidden="true"></i>
+                                        </button>
+                                    @else
                                     <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Nonaktifkan user {{ addslashes($user->username) }}?')">
                                         @csrf
@@ -68,6 +83,7 @@
                                             <i class="fas fa-user-slash"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -106,8 +122,9 @@
     </div>
     @endif
 
-    @if (auth()->user()->hasPermission('users.update'))
+    @if ($canEditUsers)
     @foreach ($users as $user)
+        @continue(! $isSuperAdmin && $user->roles->contains('slug', 'super-admin'))
         <div class="modal fade" id="edit-user-{{ $user->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <form action="{{ route('users.update', $user) }}" method="POST" class="modal-content">

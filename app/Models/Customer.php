@@ -15,10 +15,6 @@ class Customer extends Model
         'status',
     ];
 
-    protected $hidden = [
-        'legacy_user_id',
-    ];
-
     public function subBarang(): HasMany
     {
         return $this->hasMany(sub_barang::class);

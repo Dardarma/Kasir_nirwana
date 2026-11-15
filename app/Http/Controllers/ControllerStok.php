@@ -30,8 +30,6 @@ class ControllerStok extends Controller
                 DB::raw('(SELECT COALESCE(SUM(qty_keluar), 0) FROM stok_keluar WHERE barang_id = barang.id) as stok_keluar'),
                 // Subquery untuk stok akhir
                 DB::raw('(SELECT COALESCE(SUM(qty_masuk), 0) FROM stok_masuk WHERE barang_id = barang.id) - (SELECT COALESCE(SUM(qty_keluar), 0) FROM stok_keluar WHERE barang_id = barang.id) as stok'),
-                //subquery Stok per pcs
-                DB::raw('FLOOR(((SELECT COALESCE(SUM(qty_masuk), 0) FROM stok_masuk WHERE barang_id = barang.id) - (SELECT COALESCE(SUM(qty_keluar), 0) FROM stok_keluar WHERE barang_id = barang.id)) / 250) as stok_per_pcs'),
 
             ])
             ->when($search, function ($query, $search) {
@@ -48,7 +46,11 @@ class ControllerStok extends Controller
             ->where('status', 'aktif')
             ->paginate($paginate);
 
-        return view('list.stock', compact('stok'));
+        $satuanStok = \App\Models\Satuan::with('parent')->get()->mapWithKeys(
+            fn ($unit) => [$unit->nama => $unit->parent?->nama ?? $unit->nama]
+        );
+
+        return view('stok.index', compact('stok', 'satuanStok'));
     }
 
     public function getLabaRugi(Request $request)
@@ -72,10 +74,10 @@ class ControllerStok extends Controller
             ->paginate($paginate);
             // dd($data);
 
-            return view('list.laba_rugi', compact('data'));
+            return view('reports.laba-rugi', compact('data'));
         }catch (\Exception $e)
         {
-            return redirect()->back()->withErrors(['Gagal mengambil data laba rugi: ' . $e->getMessage()]);
+            return redirect()->back()->withErrors(['Gagal mengambil data laba rugi']);
         }
 
     }

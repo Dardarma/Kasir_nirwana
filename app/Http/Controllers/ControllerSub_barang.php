@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\sub_barang;
 use App\Models\barang;
 use App\Models\Customer;
+use App\Models\Satuan;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 
@@ -28,7 +30,7 @@ class ControllerSub_barang extends Controller
             ->paginate($paginate);
 
             // dd($produk);
-        $barang = barang::select('id', 'nama_barang')
+        $barang = barang::select('id', 'nama_barang', 'satuan')
             ->where('status', 'aktif')
             ->whereIn('sub_kategori', ['barang_jadi', 'produk_jadi'])
             ->get();
@@ -39,7 +41,8 @@ class ControllerSub_barang extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('list.Sub_barang_list', compact('produk', 'barang', 'customers'));
+        $conversions = Satuan::konversiStok();
+        return view('sub-barang.index', compact('produk', 'barang', 'customers', 'conversions'));
     }
 
     public function create(Request $request)
@@ -48,8 +51,7 @@ class ControllerSub_barang extends Controller
             'barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
             'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
-            'satuan' => 'required|in:kg,gram,pcs',
-            'gramasi' => 'required|integer|min:1',
+            'satuan' => 'required|string|exists:satuan,nama',
             'harga' => 'required|integer|min:0',
        ]);
     }
@@ -60,10 +62,11 @@ class ControllerSub_barang extends Controller
             'barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
             'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
-            'satuan' => 'required|in:kg,gram,pcs',
-            'gramasi' => 'required|integer|min:1',
+            'satuan' => 'required|string|exists:satuan,nama',
             'harga' => 'required|integer|min:0',
         ]);
+
+        $satuanTerkecil = $this->satuanTerkecil($request->satuan, $request->barang);
 
         try {
             sub_barang::create([
@@ -71,14 +74,15 @@ class ControllerSub_barang extends Controller
                 'sub_nama' => $request->sub_nama,
                 'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
-                'gramasi' => $request->gramasi,
+                'satuan_terkecil' => $satuanTerkecil,
                 'harga' => $request->harga,
                 'status' => 'aktif'
             ]);
 
             return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil ditambahkan');
         } catch (\Exception $e) {
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal menambahkan sub barang: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('sub_barang.index')->with('error', 'Gagal menambahkan sub barang');
         }
     }
 
@@ -88,10 +92,11 @@ class ControllerSub_barang extends Controller
             'nama_barang' => 'required|exists:barang,id',
             'sub_nama' => 'required|string|max:255',
             'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
-            'satuan' => 'required|in:kg,gram,pcs',
-            'gramasi' => 'required|integer|min:1',
+            'satuan' => 'required|string|exists:satuan,nama',
             'harga' => 'required|integer|min:0',
         ]);
+
+        $satuanTerkecil = $this->satuanTerkecil($request->satuan, $request->nama_barang);
 
         try {
             $subBarang = sub_barang::findOrFail($id);
@@ -100,13 +105,14 @@ class ControllerSub_barang extends Controller
                 'sub_nama' => $request->sub_nama,
                 'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
-                'gramasi' => $request->gramasi,
+                'satuan_terkecil' => $satuanTerkecil,
                 'harga' => $request->harga,
             ]);
 
             return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil diupdate');
         } catch (\Exception $e) {
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal mengupdate sub barang: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('sub_barang.index')->with('error', 'Gagal mengupdate sub barang');
         }
     }
 
@@ -118,7 +124,19 @@ class ControllerSub_barang extends Controller
 
             return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil dihapus');
         } catch (\Exception $e) {
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal menghapus sub barang: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('sub_barang.index')->with('error', 'Gagal menghapus sub barang');
         }
+    }
+
+    private function satuanTerkecil(string $satuan, int $barangId): string
+    {
+        $barang = barang::findOrFail($barangId);
+        [$dasar] = Satuan::dasarStok($satuan);
+        if ($dasar !== Satuan::dasarStok($barang->satuan)[0]) {
+            throw ValidationException::withMessages(['satuan' => 'Pilih satuan yang memiliki satuan dasar sama dengan barang.']);
+        }
+
+        return $dasar;
     }
 }

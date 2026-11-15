@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureUserHasPermission;
+use App\Http\Middleware\EnsureAccountIsActive;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: null,
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [EnsureAccountIsActive::class]);
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
         ]);

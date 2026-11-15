@@ -78,6 +78,19 @@ class RolePermissionManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_roles_manage_permission_does_not_grant_role_management_to_non_super_admin(): void
+    {
+        $this->seed(AccessControlSeeder::class);
+
+        $role = Role::create(['name' => 'Operator', 'slug' => 'operator', 'is_active' => true]);
+        $role->permissions()->attach(Permission::where('slug', 'roles.manage')->firstOrFail());
+        $user = User::factory()->create();
+        $user->roles()->attach($role);
+
+        $this->actingAs($user)->get(route('roles.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('permissions.index'))->assertForbidden();
+    }
+
     public function test_super_admin_can_manage_custom_permissions_but_not_delete_system_permissions(): void
     {
         $this->seed(AccessControlSeeder::class);

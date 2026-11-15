@@ -38,6 +38,7 @@ class RoleController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateRole($request);
+        abort_if($validated['slug'] === 'super-admin' && ! $request->user()->hasRole('super-admin'), 403);
 
         DB::transaction(function () use ($validated) {
             $role = Role::create([
@@ -57,6 +58,10 @@ class RoleController extends Controller
     {
         $validated = $this->validateRole($request, $role);
         $isSuperAdmin = $role->slug === 'super-admin';
+        abort_if(
+            ($isSuperAdmin || $validated['slug'] === 'super-admin') && ! $request->user()->hasRole('super-admin'),
+            403,
+        );
 
         DB::transaction(function () use ($role, $validated, $isSuperAdmin) {
             $role->update([
