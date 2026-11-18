@@ -55,7 +55,7 @@
                               <thead style="background-color: #578FCA; color: white;">
                                 <tr>
                                     <th style="min-width: 60px; white-space: nowrap;">No</th>
-                                    <th style="min-width: 150px; white-space: nowrap;">Nama Barang</th>
+                                    <th style="min-width: 150px; white-space: nowrap;">Nama barang</th>
                                     <th style="min-width: 80px; white-space: nowrap;">Satuan</th>
                                     <th style="min-width: 80px; white-space: nowrap;">Kategori</th>
                                     <th style="min-width: 80px; white-space: nowrap;">Sub Kategori</th>
