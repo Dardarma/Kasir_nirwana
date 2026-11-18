@@ -10,6 +10,13 @@ class Barang extends Model
 
     protected $guarded = ['id'];
 
+    public const NON_STOK = 'non_stok';
+
+    public function isNonStok(): bool
+    {
+        return $this->sub_kategori === self::NON_STOK;
+    }
+
     public function transaksi_detail()
     {
         return $this->hasmany(Transaksi_detail::class);

@@ -12,7 +12,7 @@ class sub_barang extends Model
 
     public function barang()
     {
-        return $this->belongsTo(barang::class);
+        return $this->belongsTo(Barang::class);
     }
 
     public function customer()

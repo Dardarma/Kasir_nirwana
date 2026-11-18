@@ -10,43 +10,7 @@
             <div class="modal-body">
                 <form method="post" action="{{ route('Barang_store') }}" enctype="multipart/form-data">
                     @csrf
-                    <div class="form-group">
-                        <label for="nama_barang">Nama Barang</label>
-                        <input type="text" class="form-control" name="nama_barang" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nama">Satuan</label>
-                        <select class="form-control" id="satuan_add" name="satuan" required>
-                            <option value="">-- Pilih Satuan --</option>
-                            @foreach ($satuanList as $unit)
-                                <option value="{{ $unit }}">{{ $unit }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <div class="form-group">
-                            <label for="nama">Kategori</label>
-                            <select class="form-control" name="kategori" id="kategori" onchange="changeKategori()" required>
-                               <option value="">-- Pilih Kategori --</option>
-                               <option value="produksi">Produksi</option>
-                               <option value="jadi">Jadi</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="nama">Sub Kategori</label>
-                        <select class="form-control" name="sub_kategori" id="sub_kategori" required>
-                           <option value="">-- Pilih Sub Kategori --</option>
-                        </select>
-                    </div>
-                    <script>
-                        // Disable sub kategori saat load
-                        document.getElementById('sub_kategori').disabled = true;
-                    </script>
-                    <div class="form-group">
-                        <label for="nama">Harga</label>
-                        <input type="number" class="form-control" name="harga" required>
-                    </div>
+                    @include('barang.partials.fields', ['modal' => 'add'])
                     <div class="my-2">
                         <button type="submit" class="btn btn-primary">Simpan</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -56,51 +20,3 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-// Function untuk handle perubahan kategori
-function changeKategori() {
-    var kategori = document.getElementById('kategori').value;
-    var subKategori = document.getElementById('sub_kategori');
-    
-        subKategori.closest('.form-group').hidden = kategori === 'jadi';
-
-        // Clear existing options
-    subKategori.innerHTML = '<option value="">-- Pilih Sub Kategori --</option>';
-    
-    // Enable sub kategori
-    subKategori.disabled = false;
-    
-    if (kategori === 'produksi') {
-        subKategori.innerHTML += '<option value="bahan_baku">Bahan Baku</option>';
-        subKategori.innerHTML += '<option value="penolong/alat">Penolong/Alat</option>';
-        subKategori.innerHTML += '<option value="produk_jadi">Produk Jadi</option>';
-    } else if (kategori === 'jadi') {
-        subKategori.disabled = true;
-    } else {
-        subKategori.disabled = true;
-    }
-}
-
-// Set initial state
-window.onload = function() {
-    document.getElementById('sub_kategori').disabled = true;
-}
-
-// Handle form submission
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('#add form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            // Disable submit button to prevent double submission
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Menyimpan...';
-            }
-        });
-    }
-});
-</script>
-
-

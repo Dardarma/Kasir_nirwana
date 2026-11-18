@@ -1,0 +1,79 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kasir-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/ci.yml
+    with:
+      package-release: true
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: kasir-release
+          path: ${{ runner.temp }}
+
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ vars.TS_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tags: tag:kasir-deploy
+          args: --accept-routes
+
+      - name: Upload and deploy release
+        shell: bash
+        env:
+          KASIR_HOST: ${{ vars.KASIR_HOST }}
+          KASIR_DB_NAME: ${{ vars.KASIR_DB_NAME }}
+          KASIR_SMOKE_URL: ${{ vars.KASIR_SMOKE_URL }}
+          SSH_PRIVATE_KEY: ${{ secrets.KASIR_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.KASIR_SSH_KNOWN_HOSTS }}
+        run: |
+          : "${KASIR_HOST:?Set KASIR_HOST to the LXC LAN IP}"
+          : "${KASIR_DB_NAME:?Set KASIR_DB_NAME to the production database name}"
+          : "${KASIR_SMOKE_URL:?Set KASIR_SMOKE_URL to the production login URL}"
+          : "${SSH_PRIVATE_KEY:?Missing KASIR_SSH_PRIVATE_KEY}"
+          : "${SSH_KNOWN_HOSTS:?Missing KASIR_SSH_KNOWN_HOSTS}"
+          [[ $KASIR_HOST =~ ^[0-9.]+$ && $KASIR_DB_NAME =~ ^[a-zA-Z0-9_]+$ ]]
+          [[ $KASIR_SMOKE_URL =~ ^https?://[^[:space:][:cntrl:]]+$ ]]
+
+          umask 077
+          ssh_dir=$(mktemp -d)
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+
+          options=(-i "$ssh_dir/key" -o "UserKnownHostsFile=$ssh_dir/known_hosts"
+            -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=10)
+          target="deployment@$KASIR_HOST"
+          remote_archive=$(ssh "${options[@]}" "$target" 'mktemp /tmp/kasir-release.XXXXXXXX')
+          [[ $remote_archive =~ ^/tmp/kasir-release\.[a-zA-Z0-9]+$ ]]
+          trap 'ssh "${options[@]}" "$target" "rm -f -- $remote_archive"' EXIT
+          scp "${options[@]}" "$RUNNER_TEMP/kasir-release.tar.gz" "$target:$remote_archive"
+          printf -v deploy_command 'bash -s -- %q %q %q %q' \
+            "$remote_archive" "$GITHUB_SHA" "$KASIR_DB_NAME" "$KASIR_SMOKE_URL"
+          ssh "${options[@]}" "$target" "$deploy_command" < scripts/deploy-production.sh

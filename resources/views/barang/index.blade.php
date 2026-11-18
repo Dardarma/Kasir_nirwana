@@ -76,7 +76,7 @@
                                     <td style="white-space: nowrap;">{{ $item->nama_barang }}</td>
                                     <td style="white-space: nowrap;">{{ $item->satuan }}</td>
                                     <td style="white-space: nowrap;" >{{ $item->kategori }}</td>
-                                    <td style="white-space: nowrap;">{{ $item->kategori === 'jadi' ? '' : $item->sub_kategori }}</td>
+                                    <td style="white-space: nowrap;">{{ $item->sub_kategori === 'non_stok' ? 'Nonstok' : $item->sub_kategori }}</td>
                                     <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
                                         {{ (float) $item->harga == 0 ? '-' : 'Rp ' . number_format($item->harga, 0, ',', '.') }}
                                     </td>
@@ -86,6 +86,7 @@
                                          data-toggle="modal" 
                                          data-target="#edit"
                                          data-id = "{{ $item->id }}"
+                                         data-update-url="{{ route('Barang_update', $item->id) }}"
                                          data-nama_barang  ="{{ $item->nama_barang }}"
                                          data-satuan = "{{ $item->satuan }}"
                                          data-kategori = "{{ $item->kategori }}"
@@ -147,45 +148,63 @@
 @endsection
 @section('script')
 <script>
-    $('.btn-edit').on('click', function() {
-        var id = $(this).data('id');
-        var nama_barang = $(this).data('nama_barang');
-        var satuan = $(this).data('satuan');
-        var kategori = $(this).data('kategori');
-        var sub_kategori = $(this).data('sub_kategori');
-        var harga = $(this).data('harga');
+    const addBarangForm = document.querySelector('#add form');
+    const editBarangForm = document.getElementById('edit-form');
 
-        $('#edit').find('input[name="nama"]').val(nama_barang);
-        $('#edit').find('select[name="satuan"]').val(satuan);
-        $('#edit').find('#kategori_edit').val(kategori);
-        $('#edit').find('#sub_kategori_edit').val(sub_kategori);
-        $('#edit').find('input[name="harga"]').val(harga);
-        
-        // Set the form action to the correct URL
-        $('#edit form').attr('action', '/barang/' + id);
+    function updateBarangFields(form) {
+        form.querySelectorAll('fieldset[data-kategori]').forEach(group => {
+            const active = group.dataset.kategori === form.elements.kategori.value;
+            group.hidden = !active;
+            group.disabled = !active;
+        });
+
+        const kategori = form.elements.kategori.value;
+        const subKategori = form.elements.sub_kategori;
+        const group = form.querySelector('[data-sub-kategori]');
+        group.hidden = group.disabled = !kategori;
+        Array.from(subKategori.options).forEach(option => {
+            option.hidden = option.disabled = !!option.dataset.optionKategori && option.dataset.optionKategori !== kategori;
+        });
+        if (subKategori.selectedOptions[0]?.disabled || !subKategori.value) {
+            subKategori.value = kategori === 'jadi' ? 'barang_jadi' : '';
+        }
+
+        const harga = form.querySelector('[data-harga-barang]');
+        harga.hidden = form.elements.harga.disabled = subKategori.value === 'non_stok';
+
+        const customerGroup = form.querySelector('[data-sub-barang-customer]');
+        if (customerGroup) {
+            const needsCustomer = form.elements.kategori.value === 'jadi' && form.elements.sub_nama.value.trim() !== '';
+            customerGroup.hidden = !needsCustomer;
+            form.elements.customer_id.disabled = !needsCustomer;
+            form.elements.customer_id.required = needsCustomer;
+        }
+    }
+
+    [addBarangForm, editBarangForm].forEach(form => {
+        form.elements.kategori.addEventListener('change', () => updateBarangFields(form));
+        form.elements.sub_kategori.addEventListener('change', () => updateBarangFields(form));
+        form.elements.namedItem('sub_nama')?.addEventListener('input', () => updateBarangFields(form));
+        updateBarangFields(form);
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-    const editButtons = document.querySelectorAll('.btn-edit');
-    
-    editButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            const data = {
-                id: this.getAttribute('data-id'),
-                nama_barang: this.getAttribute('data-nama_barang'),
-                satuan: this.getAttribute('data-satuan'),
-                kategori: this.getAttribute('data-kategori'),
-                sub_kategori: this.getAttribute('data-sub_kategori'),
-                harga: this.getAttribute('data-harga')
-            };
-            
-            // Panggil fungsi untuk populate form edit
-            if (typeof populateEditForm === 'function') {
-                populateEditForm(data);
-            }
+    addBarangForm.addEventListener('submit', () => {
+        const submitButton = addBarangForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Menyimpan...';
+    });
+
+    document.querySelectorAll('.btn-edit').forEach(button => {
+        button.addEventListener('click', () => {
+            editBarangForm.reset();
+            const data = button.dataset;
+            editBarangForm.action = button.dataset.updateUrl;
+            ['id', 'nama_barang', 'kategori', 'satuan', 'sub_kategori', 'harga'].forEach(name => {
+                editBarangForm.elements.namedItem(name).value = data[name];
+            });
+            updateBarangFields(editBarangForm);
         });
     });
-});
 
 document.querySelectorAll('.btn-delete').forEach(button => {
     button.addEventListener('click', function() {

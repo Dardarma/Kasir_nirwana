@@ -123,7 +123,7 @@
                         <div class="form-group">
                             <label for="harga">Harga</label>
                             <input type="number" class="form-control" name="harga" id="harga"
-                                oninput="updateSubTotal()" readonly required>
+                                oninput="updateSubTotal()" min="0" max="2147483647" step="1" readonly required>
                         </div>
                     </div>
                     <div class="col-9">
@@ -200,10 +200,11 @@
                         response.data.forEach(function(item) {
                             const option = new Option(item.sub_nama, item.id);
                             option.dataset.satuan = item.satuan;
-                            option.dataset.harga = item.harga;
+                            option.dataset.harga = item.harga ?? '';
+                            option.dataset.nonStok = item.non_stok ? '1' : '0';
                             option.dataset.idBarang = item.barang_id;
                             option.dataset.customerId = item.customer_id;
-                            option.dataset.gramasi = item.faktor_satuan;
+                            option.dataset.gramasi = item.faktor_satuan ?? '';
                             barangSelect.add(option);
                         });
                     } else {
@@ -229,12 +230,13 @@
             if (select.value === '') {
                 satuanInput.value = '';
                 hargaInput.value = '';
+                hargaInput.readOnly = true;
                 currentStok = 0;
                 id_barang.value = '';
                 stokInfo.textContent = 'Pilih barang untuk melihat stok';
                 stokInfo.className = 'text-muted';
                 jumlahInput.max = '';
-                gramasi.value = 0;
+                gramasiInput.value = '';
                 updateSubTotal();
                 return;
             }
@@ -249,16 +251,30 @@
 
 
             satuanInput.value = satuan || '';
-            hargaInput.value = harga || '';
+            const nonStok = selectedOption.dataset.nonStok === '1';
+            hargaInput.readOnly = !nonStok;
+            hargaInput.value = nonStok ? '' : (harga || '');
             id_barang.value = barangId || '';
             gramasiInput.value = gramasi || '';
 
 
-            // Get stok real-time via AJAX
+            currentStok = 0;
+            jumlahInput.max = '';
+            if (nonStok) {
+                stokInfo.textContent = 'Item nonstok. Isi harga satuan.';
+                stokInfo.className = 'text-muted';
+                updateSubTotal();
+                return;
+            }
+
+            stokInfo.textContent = 'Memuat stok…';
+            stokInfo.className = 'text-muted';
+            updateSubTotal();
             $.ajax({
                 url: `{{ url('/kasir/stok-realtime') }}/${subBarangId}`,
                 type: 'GET',
                 success: function(response) {
+                    if (select.selectedOptions[0] !== selectedOption) return;
                     if (response.status === 'success') {
                         currentStok = response.stok;
                         
@@ -283,6 +299,7 @@
                     }
                 },
                 error: function() {
+                    if (select.selectedOptions[0] !== selectedOption) return;
                     // Fallback ke data dari option jika AJAX gagal
                     var stok = parseFloat(selectedOption.getAttribute('data-stok')) || 0;
                     currentStok = stok;
@@ -322,7 +339,7 @@
                 alert(`Jumlah tidak boleh melebihi stok yang tersedia (${formatJumlah(currentStok)})`);
             }
 
-            var subTotal = harga * jumlah;
+            var subTotal = hargaInput.readOnly ? harga * jumlah : Math.round(harga * jumlah);
 
             // Format sub total dengan rupiah
             subTotalInput.value = subTotal > 0 ? `Rp ${formatRupiah(subTotal)}` : '';
@@ -356,30 +373,31 @@
                 return;
             }
 
-            if (harga <= 0) {
-                alert('Harga harus lebih dari 0!');
+            var selectedOption = sub_barangSelect.options[sub_barangSelect.selectedIndex];
+            const nonStok = selectedOption.dataset.nonStok === '1';
+            if (nonStok ? !hargaInput.value || !hargaInput.validity.valid : harga <= 0) {
+                alert(nonStok ? 'Isi harga satuan dalam rupiah (minimal 0).' : 'Harga harus lebih dari 0!');
                 return;
             }
 
             // Validasi stok
-            if (currentStok <= 0) {
+            if (!nonStok && currentStok <= 0) {
                 alert('Stok barang tidak tersedia!');
                 return;
             }
 
-            if (jumlah > currentStok) {
+            if (!nonStok && jumlah > currentStok) {
                 alert(`Jumlah tidak boleh melebihi stok yang tersedia (${formatJumlah(currentStok)})`);
                 return;
             }
 
             // Get selected option data
-            var selectedOption = sub_barangSelect.options[sub_barangSelect.selectedIndex];
             var namaBarang = selectedOption.text;
             var sub_barangId = sub_barangSelect.value;
             
 
             // Calculate subtotal
-            var subTotal = jumlah * harga;
+            var subTotal = nonStok ? Math.round(jumlah * harga) : jumlah * harga;
 
             // Create new row
             var tbody = document.getElementById('table-body');
@@ -418,7 +436,7 @@
                 satuan: satuan,
                 harga: harga,
                 sub_total: subTotal,
-                jumlah_gram: jumlahGram
+                jumlah_gram: nonStok ? 0 : jumlahGram
             });
 
             // Increment counter
@@ -506,6 +524,7 @@
             document.getElementById('sub_barang').value = '';
             document.querySelector('input[name="jumlah"]').value = '';
             document.getElementById('harga').value = '';
+            document.getElementById('harga').readOnly = true;
             document.getElementById('satuan').value = '';
             document.getElementById('sub_total').value = '';
             document.getElementById('barang_id').value = '';
@@ -699,6 +718,7 @@
                 $.ajax({
                     url: '{{ url("/kasir") }}',
                     type: 'POST',
+                    dataType: 'json',
                     data: data,
                     beforeSend: function() {
                         $('#btn-simpan').prop('disabled', true).text('Menyimpan...');

@@ -16,7 +16,7 @@
                     <select class="form-control" name="nama_barang" id="nama_barang">
                         <option value="">-- Pilih Barang --</option>
                         @foreach ($barang as $item)
-                            <option value="{{ $item->id }}" data-satuan="{{ $item->satuan }}">{{ $item->nama_barang }}</option>
+                            <option value="{{ $item->id }}" data-satuan="{{ $item->satuan }}" data-non-stok="{{ (int) $item->isNonStok() }}">{{ $item->nama_barang }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -44,7 +44,7 @@
                     <input type="text" class="form-control" data-konversi readonly>
                 </div>
                 <div class="form-group">
-                    <label for="nama">Harga</label>
+                    <label for="harga">Harga</label>
                     <input type="number" class="form-control" name="harga" id="harga" required>
                 </div>
                 <div class="my-2">

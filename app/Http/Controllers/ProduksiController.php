@@ -17,7 +17,7 @@ class ProduksiController extends Controller
     public function index(){
 
         $barang =  Barang::where('status', 'aktif')
-            ->where('kategori', 'jadi')
+            ->where('kategori', 'jadi')->where('sub_kategori', '!=', Barang::NON_STOK)
             ->get();
     
         $satuanProduksi = Satuan::konversiStok();

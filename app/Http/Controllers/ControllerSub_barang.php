@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\sub_barang;
-use App\Models\barang;
+use App\Models\Barang;
 use App\Models\Customer;
 use App\Models\Satuan;
 use Illuminate\Validation\ValidationException;
@@ -30,9 +30,9 @@ class ControllerSub_barang extends Controller
             ->paginate($paginate);
 
             // dd($produk);
-        $barang = barang::select('id', 'nama_barang', 'satuan')
+        $barang = Barang::select('id', 'nama_barang', 'satuan', 'sub_kategori')
             ->where('status', 'aktif')
-            ->whereIn('sub_kategori', ['barang_jadi', 'produk_jadi'])
+            ->whereIn('sub_kategori', ['barang_jadi', 'produk_jadi', Barang::NON_STOK])
             ->get();
 
         $customers = Customer::query()
@@ -45,17 +45,6 @@ class ControllerSub_barang extends Controller
         return view('sub-barang.index', compact('produk', 'barang', 'customers', 'conversions'));
     }
 
-    public function create(Request $request)
-    {
-       $request->validate([
-            'barang' => 'required|exists:barang,id',
-            'sub_nama' => 'required|string|max:255',
-            'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
-            'satuan' => 'required|string|exists:satuan,nama',
-            'harga' => 'required|integer|min:0',
-       ]);
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -63,10 +52,10 @@ class ControllerSub_barang extends Controller
             'sub_nama' => 'required|string|max:255',
             'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
             'satuan' => 'required|string|exists:satuan,nama',
-            'harga' => 'required|integer|min:0',
+            'harga' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
         ]);
 
-        $satuanTerkecil = $this->satuanTerkecil($request->satuan, $request->barang);
+        $attributes = $this->saleAttributes($request, $request->barang);
 
         try {
             sub_barang::create([
@@ -74,10 +63,8 @@ class ControllerSub_barang extends Controller
                 'sub_nama' => $request->sub_nama,
                 'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
-                'satuan_terkecil' => $satuanTerkecil,
-                'harga' => $request->harga,
                 'status' => 'aktif'
-            ]);
+            ] + $attributes);
 
             return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil ditambahkan');
         } catch (\Exception $e) {
@@ -93,10 +80,10 @@ class ControllerSub_barang extends Controller
             'sub_nama' => 'required|string|max:255',
             'customer' => ['required', Rule::exists('customers', 'id')->where('status', 'aktif')],
             'satuan' => 'required|string|exists:satuan,nama',
-            'harga' => 'required|integer|min:0',
+            'harga' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
         ]);
 
-        $satuanTerkecil = $this->satuanTerkecil($request->satuan, $request->nama_barang);
+        $attributes = $this->saleAttributes($request, $request->nama_barang);
 
         try {
             $subBarang = sub_barang::findOrFail($id);
@@ -105,9 +92,7 @@ class ControllerSub_barang extends Controller
                 'sub_nama' => $request->sub_nama,
                 'customer_id' => $request->customer,
                 'satuan' => $request->satuan,
-                'satuan_terkecil' => $satuanTerkecil,
-                'harga' => $request->harga,
-            ]);
+            ] + $attributes);
 
             return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil diupdate');
         } catch (\Exception $e) {
@@ -129,14 +114,21 @@ class ControllerSub_barang extends Controller
         }
     }
 
-    private function satuanTerkecil(string $satuan, int $barangId): string
+    private function saleAttributes(Request $request, int $barangId): array
     {
-        $barang = barang::findOrFail($barangId);
-        [$dasar] = Satuan::dasarStok($satuan);
+        $barang = Barang::findOrFail($barangId);
+        [$dasar] = Satuan::dasarStok($request->satuan);
         if ($dasar !== Satuan::dasarStok($barang->satuan)[0]) {
             throw ValidationException::withMessages(['satuan' => 'Pilih satuan yang memiliki satuan dasar sama dengan barang.']);
         }
 
-        return $dasar;
+        if (! $barang->isNonStok()) {
+            $request->validate(['harga' => 'required']);
+        }
+
+        return [
+            'satuan_terkecil' => $dasar,
+            'harga' => $barang->isNonStok() ? null : $request->harga,
+        ];
     }
 }

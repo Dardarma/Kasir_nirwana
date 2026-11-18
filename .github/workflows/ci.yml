@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [Development, main]
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      package-release:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Laravel tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: cp .env.example .env
+      - run: composer install --no-interaction --prefer-dist
+      - run: php artisan key:generate
+      - run: npm ci
+      - run: npm run build
+      - run: composer test
+      - run: composer audit --locked
+
+      - name: Package production release
+        if: inputs.package-release
+        run: |
+          release="$RUNNER_TEMP/release"
+          mkdir -p "$release"
+          git archive HEAD | tar -x -C "$release"
+          rm -rf -- "$release/storage"
+          cp -a public/build "$release/public/build"
+          composer --working-dir="$release" install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+          printf '%s\n' "$GITHUB_SHA" > "$release/REVISION"
+          tar -czf "$RUNNER_TEMP/kasir-release.tar.gz" -C "$release" .
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.package-release
+        with:
+          name: kasir-release
+          path: ${{ runner.temp }}/kasir-release.tar.gz
+          if-no-files-found: error
+          retention-days: 7

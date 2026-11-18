@@ -35,14 +35,10 @@ class ControllerStok extends Controller
             ->when($search, function ($query, $search) {
                 return $query->where('nama_barang', 'like', '%' . $search . '%');
             })
-            ->when($filter_kategori == 'semua', function ($query) {
-                // Ketika filter semua, kecualikan barang dengan sub_kategori penolong/alat
-                return $query->where('sub_kategori', '!=', 'penolong/alat');
-            })
             ->when($filter_kategori != 'semua', function ($query) use ($filter_kategori) {
-                return $query->where('kategori', $filter_kategori)
-                           ->where('sub_kategori', '!=', 'penolong/alat');
+                return $query->where('kategori', $filter_kategori);
             })
+            ->whereNotIn('sub_kategori', ['penolong/alat', Barang::NON_STOK])
             ->where('status', 'aktif')
             ->paginate($paginate);
 

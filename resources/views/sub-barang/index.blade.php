@@ -84,7 +84,7 @@
                                     <td style="white-space: nowrap;">{{ $item->barang->nama_barang }}</td>
                                     <td style="white-space: nowrap;">{{ $item->sub_nama }}</td>
                                     <td style="white-space: nowrap;">{{ $item->customer?->name ?? '-' }}</td>
-                                    <td style="white-space: nowrap;">{{ format_rupiah($item->harga) }} </td>
+                                    <td style="white-space: nowrap;">{{ $item->barang?->isNonStok() ? 'Isi di kasir' : format_rupiah($item->harga) }} </td>
                                     <td style="white-space: nowrap;">{{ $item->satuan }}</td>
                                     <td
                                         style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
@@ -159,7 +159,10 @@
 
             $('#add_nama_barang, #nama_barang').on('change', function () {
                 const select = this.form.elements.namedItem('satuan');
-                isiPilihanSatuan(select, this.selectedOptions[0]?.dataset.satuan, conversions);
+                const option = this.selectedOptions[0];
+                const harga = this.form.elements.namedItem('harga');
+                harga.closest('.form-group').hidden = harga.disabled = option?.dataset.nonStok === '1';
+                isiPilihanSatuan(select, option?.dataset.satuan, conversions);
                 $(select).trigger('change');
             });
             // Ketika modal edit dibuka, check satuan yang sudah terpilih

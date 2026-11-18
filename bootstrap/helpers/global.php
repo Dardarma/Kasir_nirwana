@@ -43,7 +43,7 @@ if (!function_exists('get_stok')) {
             ) as stok')
         ])
         ->where('status', 'aktif') // Hanya barang aktif
-        ->where('sub_kategori', '!=', 'penolong/alat') // Kecualikan barang penolong/alat
+        ->whereNotIn('sub_kategori', ['penolong/alat', Barang::NON_STOK])
         ->orderBy('id')
         ->get()
         ->fresh(); // Force fresh data dari database

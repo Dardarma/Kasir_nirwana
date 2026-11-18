@@ -159,9 +159,11 @@ class TransactionSecurityTest extends TestCase
             'sub_barang_id' => $subBarang->id,
             'jumlah_gram' => 250,
         ];
+        $item['harga'] = 1;
         $this->postJson(route('kasir.store'), $this->payload([$item]) + ['customer_id' => $customer->id])
             ->assertOk();
         $sale = Transaksi::where('jenis_transaksi', 'penjualan')->sole();
+        $this->assertEquals(1000, $sale->total_bayar);
         $this->assertEquals(1000, get_stok_by_id($this->barang->id));
 
         $this->put(route('kasir.destroy', $sale->id), [
@@ -182,6 +184,60 @@ class TransactionSecurityTest extends TestCase
 
         $this->put(route('Barang_destroy', $this->barang->id))->assertSessionHas('success');
         $this->assertSame('nonaktif', $this->barang->fresh()->status);
+    }
+
+    public function test_non_stock_item_uses_manual_price_without_recording_stock(): void
+    {
+        $this->signInAsSuperAdmin();
+        $customer = Customer::create(['name' => 'Umum']);
+        $this->post(route('Barang_store'), [
+            'nama_barang' => 'Ongkir',
+            'kategori' => 'jadi',
+            'sub_kategori' => 'non_stok',
+            'satuan' => 'borongan',
+        ])->assertSessionHas('success');
+        $barang = Barang::where('nama_barang', 'Ongkir')->sole();
+        $this->assertNull($barang->harga);
+
+        $this->post(route('sub_barang.store'), [
+            'barang' => $barang->id,
+            'sub_nama' => 'Ongkir',
+            'customer' => $customer->id,
+            'satuan' => 'borongan',
+        ])->assertSessionHas('success');
+        $subBarang = $barang->sub_barang()->sole();
+        $this->assertNull($subBarang->harga);
+
+        $this->getJson(route('kasir.barang-by-customer', $customer->id))
+            ->assertOk()->assertJsonPath('data.0.non_stok', true);
+        $this->getJson(route('kasir.stok-realtime', $subBarang->id))
+            ->assertOk()->assertJsonPath('stok', null);
+
+        $item = [
+            'barang_id' => $barang->id,
+            'sub_barang_id' => $subBarang->id,
+            'nama_barang' => 'Ongkir',
+            'jumlah' => 1,
+        ];
+        $customerData = ['customer_id' => $customer->id];
+        $this->postJson(route('kasir.store'), $this->payload([$item]) + $customerData)
+            ->assertUnprocessable()->assertJsonValidationErrors('items.0.harga');
+        $this->postJson(route('kasir.store'), $this->payload([$item + ['harga' => -1]]) + $customerData)
+            ->assertUnprocessable()->assertJsonValidationErrors('items.0.harga');
+        $this->assertDatabaseCount('transaksi', 0);
+
+        $this->postJson(route('kasir.store'), $this->payload([$item + ['harga' => 20000]]) + $customerData)
+            ->assertOk();
+        $this->assertDatabaseHas('transaksi', ['total_bayar' => 20000]);
+        $this->assertDatabaseHas('transaksi_detail', [
+            'barang_id' => $barang->id,
+            'harga_satuan' => 20000,
+            'subtotal' => 20000,
+            'jumlah_gram' => 0,
+            'satuan_stok' => null,
+        ]);
+        $this->assertDatabaseCount('stok_keluar', 0);
+        $this->assertFalse(get_stok()->contains('id', $barang->id));
     }
 
     private function signInAsSuperAdmin(): void

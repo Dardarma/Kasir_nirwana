@@ -47,7 +47,6 @@ class KasirController extends Controller
                 'items.*.nama_barang' => 'required|string|max:255',
                 'items.*.jumlah' => 'required|numeric|min:0.01|decimal:0,2|max:999999999',
                 'items.*.sub_barang_id' => 'required|exists:sub_barang,id',
-                'items.*.jumlah_gram' => 'required|numeric|min:0',
             ], ['items.*.jumlah.decimal' => 'Jumlah maksimal dua angka desimal. Pilih satuan yang lebih kecil bila diperlukan.', 'items.*.jumlah.min' => 'Jumlah minimal 0,01. Pilih satuan yang lebih kecil bila diperlukan.']);
 
             $customer = Customer::findOrFail($request->customer_id);
@@ -80,10 +79,38 @@ class KasirController extends Controller
                         ->where('status', 'aktif')
                         ->first();
 
-                    $conversion = $conversions[$subBarang?->satuan] ?? null;
+                    if (! $subBarang || $barang->status !== 'aktif') {
+                        throw ValidationException::withMessages([
+                            "items.{$index}.sub_barang_id" => 'Sub barang tidak tersedia untuk pelanggan ini.',
+                        ]);
+                    }
+
+                    if ($barang->isNonStok()) {
+                        $priceKey = "items.{$index}.harga";
+                        $request->validate(
+                            [$priceKey => 'required|integer|min:0|max:2147483647'],
+                            [],
+                            [$priceKey => "harga satuan {$subBarang->sub_nama}"],
+                        );
+                        $harga = (int) $request->input($priceKey);
+                        $subtotal = (int) round($item['jumlah'] * $harga);
+                        $items[$index] = array_replace($item, [
+                            'satuan' => $subBarang->satuan,
+                            'harga' => $harga,
+                            'sub_total' => $subtotal,
+                            'jumlah_gram' => 0,
+                            'faktor_satuan' => null,
+                            'satuan_stok' => null,
+                        ]);
+                        $total += $subtotal;
+
+                        continue;
+                    }
+
+                    $conversion = $conversions[$subBarang->satuan] ?? null;
                     $base = $conversions[$barang->satuan]['dasar'] ?? null;
                     $factor = $conversion && $conversion['dasar'] === $base ? $conversion['faktor'] : 0;
-                    if (!$subBarang || $barang->status !== 'aktif' || $factor <= 0) {
+                    if ($factor <= 0 || $subBarang->harga === null) {
                         return response()->json([
                             'status' => 'error',
                             'message' => "Konversi satuan untuk barang {$barang->nama_barang} tidak valid."
@@ -153,11 +180,13 @@ class KasirController extends Controller
                         'satuan_stok' => $item['satuan_stok'],
                     ]);
 
-                    Stok_keluar::create([
-                        'barang_id' => $item['barang_id'],
-                        'transaksi_detail_id' => $transaksi_detail->id,
-                        'qty_keluar' => $jumlahGram,
-                    ]);
+                    if ($jumlahGram > 0) {
+                        Stok_keluar::create([
+                            'barang_id' => $item['barang_id'],
+                            'transaksi_detail_id' => $transaksi_detail->id,
+                            'qty_keluar' => $jumlahGram,
+                        ]);
+                    }
                 }
 
                 return response()->json([
@@ -237,6 +266,16 @@ class KasirController extends Controller
                 $subBarang = sub_barang::with('barang')->select('barang_id', 'satuan')
                     ->where('id', $sub_barang_id)
                     ->firstOrFail();
+                if ($subBarang->barang->isNonStok()) {
+                    return response()->json([
+                        'status' => 'success',
+                        'barang_id' => $subBarang->barang_id,
+                        'stok' => null,
+                        'non_stok' => true,
+                        'satuan' => $subBarang->satuan,
+                    ]);
+                }
+
                 [$base, $factor] = Satuan::dasarStok($subBarang->satuan);
                 if ($base !== Satuan::dasarStok($subBarang->barang->satuan)[0] || $factor <= 0) {
                     return response()->json([
@@ -285,12 +324,15 @@ class KasirController extends Controller
                 })
                 ->where('status', 'aktif')
                 ->get()
-                ->filter(fn ($item) => isset($conversions[$item->satuan], $conversions[$item->barang->satuan])
-                    && $conversions[$item->satuan]['dasar'] === $conversions[$item->barang->satuan]['dasar'])
+                ->filter(fn ($item) => $item->barang->isNonStok() || (
+                    isset($conversions[$item->satuan], $conversions[$item->barang->satuan])
+                    && $conversions[$item->satuan]['dasar'] === $conversions[$item->barang->satuan]['dasar']
+                ))
                 ->values();
 
             foreach ($barang as $item) {
-                $item->faktor_satuan = $conversions[$item->satuan]['faktor'];
+                $item->non_stok = $item->barang->isNonStok();
+                $item->faktor_satuan = $item->non_stok ? null : $conversions[$item->satuan]['faktor'];
             }
 
             return response()->json([
