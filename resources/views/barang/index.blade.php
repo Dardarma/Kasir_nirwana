@@ -152,12 +152,6 @@
     const editBarangForm = document.getElementById('edit-form');
 
     function updateBarangFields(form) {
-        form.querySelectorAll('fieldset[data-kategori]').forEach(group => {
-            const active = group.dataset.kategori === form.elements.kategori.value;
-            group.hidden = !active;
-            group.disabled = !active;
-        });
-
         const kategori = form.elements.kategori.value;
         const subKategori = form.elements.sub_kategori;
         const group = form.querySelector('[data-sub-kategori]');
@@ -169,22 +163,12 @@
             subKategori.value = kategori === 'jadi' ? 'barang_jadi' : '';
         }
 
-        const harga = form.querySelector('[data-harga-barang]');
-        harga.hidden = form.elements.harga.disabled = subKategori.value === 'non_stok';
 
-        const customerGroup = form.querySelector('[data-sub-barang-customer]');
-        if (customerGroup) {
-            const needsCustomer = form.elements.kategori.value === 'jadi' && form.elements.sub_nama.value.trim() !== '';
-            customerGroup.hidden = !needsCustomer;
-            form.elements.customer_id.disabled = !needsCustomer;
-            form.elements.customer_id.required = needsCustomer;
-        }
     }
 
     [addBarangForm, editBarangForm].forEach(form => {
         form.elements.kategori.addEventListener('change', () => updateBarangFields(form));
         form.elements.sub_kategori.addEventListener('change', () => updateBarangFields(form));
-        form.elements.namedItem('sub_nama')?.addEventListener('input', () => updateBarangFields(form));
         updateBarangFields(form);
     });
 
@@ -199,7 +183,7 @@
             editBarangForm.reset();
             const data = button.dataset;
             editBarangForm.action = button.dataset.updateUrl;
-            ['id', 'nama_barang', 'kategori', 'satuan', 'sub_kategori', 'harga'].forEach(name => {
+            ['id', 'nama_barang', 'kategori', 'satuan', 'sub_kategori'].forEach(name => {
                 editBarangForm.elements.namedItem(name).value = data[name];
             });
             updateBarangFields(editBarangForm);

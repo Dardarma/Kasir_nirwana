@@ -32,24 +32,3 @@
                             </select>
                         </div>
                     </fieldset>
-                    <fieldset data-kategori="jadi" hidden disabled>
-                        @if (auth()->user()->hasPermission('sub-barang.create'))
-                            <div class="form-group">
-                                <label for="{{ $modal }}_sub_barang">Sub Barang Baru (opsional)</label>
-                                <input type="text" class="form-control" id="{{ $modal }}_sub_barang" name="sub_nama" maxlength="255">
-                            </div>
-                            <div class="form-group" data-sub-barang-customer hidden>
-                                <label for="{{ $modal }}_customer">Pelanggan Sub Barang</label>
-                                <select class="form-control" id="{{ $modal }}_customer" name="customer_id" disabled>
-                                    <option value="">-- Pilih Pelanggan --</option>
-                                    @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-                        <div class="form-group" data-harga-barang>
-                            <label for="{{ $modal }}_harga">Harga</label>
-                            <input type="number" class="form-control" id="{{ $modal }}_harga" name="harga" min="0" required>
-                        </div>
-                    </fieldset>
