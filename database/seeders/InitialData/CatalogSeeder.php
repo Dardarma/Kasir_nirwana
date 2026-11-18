@@ -17,7 +17,6 @@ class CatalogSeeder extends Seeder
 
         DB::transaction(function () use ($catalog) {
             $units = Satuan::konversiStok();
-            $customers = Customer::pluck('id', 'name');
             $items = [];
 
             foreach ($catalog['barang'] as $name => [$category, $unit]) {
@@ -39,7 +38,7 @@ class CatalogSeeder extends Seeder
             }
 
             foreach ($catalog['sub_barang'] as $customer => $variants) {
-                $customerId = $customers->get($customer);
+                $customerId = Customer::where('name', $customer)->value('id');
                 if ($customerId === null) {
                     throw new RuntimeException("Customer {$customer} tidak ditemukan.");
                 }
