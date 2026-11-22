@@ -192,7 +192,7 @@
 
             // AJAX call untuk get barang berdasarkan customer
             $.ajax({
-                url: `{{ url('/kasir/barang-by-customer') }}/${customerId}`,
+                url: `{{ url('/kasir/barang-by-customer', [], false) }}/${customerId}`,
                 type: 'GET',
                 success: function(response) {
                     if (response.status === 'success' && response.data.length > 0) {
