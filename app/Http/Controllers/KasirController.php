@@ -54,7 +54,7 @@ class KasirController extends Controller
             $customerBayar = $request->customer_bayar;
             $total = 0;
 
-            $kode_transaksi = Transaksi::generateCode('KAS');
+            $kode_transaksi = Transaksi::generateCode('AS');
 
             return DB::transaction(function () use ($request, $customer, $kode_transaksi, $customerBayar, $total) {
                 $barangIds = collect($request->items)->pluck('barang_id')->unique();
@@ -193,6 +193,7 @@ class KasirController extends Controller
                     'status' => 'success',
                     'message' => 'Data kasir berhasil disimpan',
                     'kode_transaksi' => $kode_transaksi,
+                    'transaksi_id' => $transaksi->id,
                     'status_pembayaran' => $statusPembayaran,
                     'total_items' => count($request->items)
                 ]);
@@ -206,6 +207,136 @@ class KasirController extends Controller
                 'message' => 'Gagal menyimpan data kasir'
             ], 400);
         }
+    }
+
+    public function downloadNota($id)
+    {
+        $transaksi = Transaksi::with(['transaksiDetail', 'customerData'])
+            ->where('jenis_transaksi', 'penjualan')
+            ->findOrFail($id);
+
+        $pdf = $this->buatPdfNota($transaksi);
+        $filename = 'nota-' . $transaksi->kode_transaksi . '.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf;
+        }, $filename, ['Content-Type' => 'application/pdf']);
+    }
+
+    private function buatPdfNota(Transaksi $transaksi): string
+    {
+        $items = $transaksi->transaksiDetail;
+        $wrappedNames = $items->map(fn ($item) => explode("\n", wordwrap(
+            iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $item->nama_barang) ?: $item->nama_barang,
+            34,
+            "\n",
+            true
+        )));
+        $extraNameLines = $wrappedNames->sum(fn ($parts) => max(0, count($parts) - 1));
+        $height = max(500, 420 + ($items->count() * 19) + ($extraNameLines * 12));
+        $content = '';
+        $text = function (float $x, float $y, string $value, string $font = 'F1', int $size = 10) use (&$content): void {
+            $value = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) ?: $value;
+            $value = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $value);
+            $content .= "BT /{$font} {$size} Tf 1 0 0 1 {$x} {$y} Tm ({$value}) Tj ET\n";
+        };
+        $rule = function (float $y) use (&$content): void {
+            $content .= "0.5 w 40 {$y} m 555 {$y} l S\n";
+        };
+
+        $y = $height - 42;
+        $text(205, $y, 'KASIR NIRWANA', 'F2', 17);
+        $y -= 20;
+        $text(227, $y, 'NOTA PENJUALAN', 'F2', 12);
+        $y -= 15;
+        $rule($y);
+
+        $y -= 24;
+        $text(42, $y, 'Tanggal', 'F2');
+        $text(110, $y, ': ' . Carbon::parse($transaksi->tanggal)->format('d-m-Y'));
+        $y -= 17;
+        $text(42, $y, 'Nomor Nota', 'F2');
+        $text(110, $y, ': ' . $transaksi->kode_transaksi);
+        $y -= 17;
+        $text(42, $y, 'Customer', 'F2');
+        $text(110, $y, ': ' . ($transaksi->customerData?->name ?? $transaksi->customer ?? '-'));
+        $y -= 17;
+        $text(42, $y, 'Metode Pembayaran', 'F2');
+        $text(150, $y, ': ' . strtoupper($transaksi->metode_pembayaran ?? '-'));
+
+        $y -= 20;
+        $rule($y);
+        $y -= 22;
+        $text(42, $y, 'No', 'F2');
+        $text(68, $y, 'Nama Barang', 'F2');
+        $text(300, $y, 'Jumlah', 'F2');
+        $text(365, $y, 'Harga Satuan', 'F2');
+        $text(470, $y, 'Total Harga', 'F2');
+        $y -= 8;
+        $rule($y);
+        $y -= 19;
+
+        foreach ($items as $index => $item) {
+            $nameLines = $wrappedNames[$index];
+            $text(42, $y, (string) ($index + 1) . '.');
+            $text(68, $y, $nameLines[0]);
+            $text(300, $y, format_jumlah($item->jumlah) . ' ' . $item->satuan);
+            $text(365, $y, format_rupiah($item->harga_satuan));
+            $text(470, $y, format_rupiah($item->subtotal));
+            $y -= 15;
+            foreach (array_slice($nameLines, 1) as $extraLine) {
+                $text(68, $y, $extraLine);
+                $y -= 12;
+            }
+            $y -= 4;
+        }
+
+        $rule($y);
+        $y -= 22;
+        $text(345, $y, 'Jumlah Penjualan', 'F2');
+        $text(465, $y, ': ' . format_rupiah($transaksi->total_bayar));
+        $y -= 17;
+        $text(345, $y, 'Dibayar', 'F2');
+        $text(465, $y, ': ' . format_rupiah($transaksi->customer_bayar));
+        $y -= 17;
+        $sisa = max(0, (float) $transaksi->total_bayar - (float) $transaksi->customer_bayar);
+        $text(345, $y, 'Sisa Pembayaran', 'F2');
+        $text(465, $y, ': ' . format_rupiah($sisa));
+        $y -= 17;
+        $text(345, $y, 'Status', 'F2');
+        $text(465, $y, ': ' . strtoupper(str_replace('_', ' ', $transaksi->status_pembayaran)));
+        $y -= 18;
+        $rule($y);
+        $y -= 24;
+        $text(42, $y, 'Terima kasih telah berbelanja di Nirwana.');
+        $y -= 18;
+        $rule($y);
+        $y -= 20;
+        $text(42, $y, 'Catatan:');
+
+        $objects = [
+            '<< /Type /Catalog /Pages 2 0 R >>',
+            '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 {$height}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+            '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+            '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+            '<< /Length ' . strlen($content) . ">>\nstream\n{$content}\nendstream",
+        ];
+
+        $pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
+        $offsets = [0];
+        foreach ($objects as $index => $object) {
+            $offsets[] = strlen($pdf);
+            $pdf .= ($index + 1) . " 0 obj\n{$object}\nendobj\n";
+        }
+        $xrefOffset = strlen($pdf);
+        $pdf .= 'xref' . "\n0 " . (count($objects) + 1) . "\n0000000000 65535 f \n";
+        foreach (array_slice($offsets, 1) as $offset) {
+            $pdf .= sprintf('%010d 00000 n ', $offset) . "\n";
+        }
+        $pdf .= 'trailer' . "\n<< /Size " . (count($objects) + 1) . " /Root 1 0 R >>\nstartxref\n{$xrefOffset}\n%%EOF";
+
+        return $pdf;
     }
 
     public function list(Request $request)
@@ -231,7 +362,8 @@ class KasirController extends Controller
                 return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
 
         return view('kasir.history', compact('transaksi'));
     }

@@ -40,7 +40,8 @@ class ControllerStok extends Controller
             })
             ->whereNotIn('sub_kategori', ['penolong/alat', Barang::NON_STOK])
             ->where('status', 'aktif')
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
 
         $satuanStok = \App\Models\Satuan::with('parent')->get()->mapWithKeys(
             fn ($unit) => [$unit->nama => $unit->parent?->nama ?? $unit->nama]
@@ -67,7 +68,8 @@ class ControllerStok extends Controller
             ->where('tanggal', 'like', $month . '%')
             ->groupBy(DB::raw('DATE(tanggal)'))
             ->orderBy(DB::raw('DATE(tanggal)'), 'desc')
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
             // dd($data);
 
             return view('reports.laba-rugi', compact('data'));

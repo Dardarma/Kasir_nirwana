@@ -27,7 +27,8 @@ class ControllerSub_barang extends Controller
                 return $query->where('customer_id', $customerId);
             })
             ->with(['barang', 'customer'])
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
 
             // dd($produk);
         $barang = Barang::select('id', 'nama_barang', 'satuan', 'sub_kategori')

@@ -25,7 +25,8 @@ class Barang_controller extends Controller
             return $query->where('kategori', $kategori);
         })
         ->where('status','aktif')
-        ->paginate($paginate);
+        ->paginate($paginate)
+        ->withQueryString();
 
         return view('barang.index', [
             'barang' => $barang,

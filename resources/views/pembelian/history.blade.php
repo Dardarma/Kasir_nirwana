@@ -41,6 +41,7 @@
                             </div>
                         </form>
 
+                        <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
                         <a href="{{ url('/pembelian') }}" class="btn btn-primary btn-sm">
                             Transaksi Baru
@@ -115,6 +116,7 @@
 
 
     @include('pembelian.partials.detail-modal')
+    @include('reports.partials.transaction-pdf-modal', ['jenis' => 'pembelian'])
 @endsection
 @section('script')
     <script>

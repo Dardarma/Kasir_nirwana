@@ -196,7 +196,8 @@ class ControllerPemakaian extends Controller
                 return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
 
         return view('pemakaian.history', compact('transaksi'));
     }

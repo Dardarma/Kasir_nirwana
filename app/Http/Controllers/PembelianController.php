@@ -141,7 +141,8 @@ class PembelianController extends Controller
           return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
       })
       ->orderBy('created_at', 'desc')
-      ->paginate($paginate);
+      ->paginate($paginate)
+      ->withQueryString();
     // dd($transaksi);
 
     return view('pembelian.history', compact('transaksi'));

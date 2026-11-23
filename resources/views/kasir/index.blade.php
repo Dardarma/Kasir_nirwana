@@ -154,7 +154,10 @@
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah" onclick="tambahItem()">Tambah</button>
                     <a href="{{url('/kasir/list')}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
-                    <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
+                    <div class="btn-group" role="group" aria-label="Aksi transaksi">
+                        <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
+                        <button type="button" class="btn btn-success mx-2" id="btn-simpan-cetak">Simpan dan Cetak</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -662,7 +665,8 @@
         //backend push itemList to backend
         //push Back End
         $(document).ready(function() {
-            $('#btn-simpan').on('click', function() {
+            $('#btn-simpan, #btn-simpan-cetak').on('click', function() {
+                const cetakNota = this.id === 'btn-simpan-cetak';
 
                 // Validasi data
                 if (item_list.length === 0) {
@@ -721,13 +725,17 @@
                     dataType: 'json',
                     data: data,
                     beforeSend: function() {
-                        $('#btn-simpan').prop('disabled', true).text('Menyimpan...');
+                        $('#btn-simpan, #btn-simpan-cetak').prop('disabled', true);
+                        $(cetakNota ? '#btn-simpan-cetak' : '#btn-simpan').text('Menyimpan...');
                     },
                     success: function(response) {
                         alert('Data berhasil disimpan!');
 
                         // Reset form dan table
                         resetForm();
+                        if (cetakNota && response.transaksi_id) {
+                            window.location.href = `{{ url('/kasir', [], false) }}/${response.transaksi_id}/nota`;
+                        }
                     },
                     error: function(xhr, status, error) {
                         console.error('Error:', xhr.responseText); // Debug
@@ -743,7 +751,9 @@
                         alert(errorMessage);
                     },
                     complete: function() {
-                        $('#btn-simpan').prop('disabled', false).text('Simpan');
+                        $('#btn-simpan, #btn-simpan-cetak').prop('disabled', false);
+                        $('#btn-simpan').text('Simpan');
+                        $('#btn-simpan-cetak').text('Simpan dan Cetak');
                     }
                 });
             });

@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReportPdfController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -55,6 +56,7 @@ Route::redirect('/costumer', '/customers')->middleware('permission:customers.vie
 Route::get('/kasir',[KasirController::class, 'index'])->middleware('permission:kasir.view')->name('kasir.index');
 Route::post('/kasir', [KasirController::class, 'store'])->middleware('permission:kasir.create')->name('kasir.store');
 Route::get('/kasir/list', [KasirController::class, 'list'])->middleware('permission:kasir.view')->name('kasir.list');
+Route::get('/kasir/{id}/nota', [KasirController::class, 'downloadNota'])->middleware('permission:kasir.view')->name('kasir.nota');
 Route::get('/kasir/{id}/detail', [KasirController::class, 'getDetail'])->middleware('permission:kasir.view');
 Route::get('/kasir/stok-realtime/{barang_id?}', [KasirController::class, 'getStokRealtime'])->middleware('permission:kasir.create')->name('kasir.stok-realtime');
 Route::get('/kasir/barang-by-customer/{customer_id}', [KasirController::class, 'getBarangByCustomer'])->middleware('permission:kasir.create')->name('kasir.barang-by-customer');
@@ -95,9 +97,7 @@ Route::put('/sub-barang/delete/{id}', [ControllerSub_barang::class, 'destroy'])-
 
 
 
-Route::get('/report',function(){
-    return view('reports.index');
-})->middleware('permission:reports.view');
+Route::get('/report/pdf', [ReportPdfController::class, 'download'])->name('reports.pdf');
 
 Route::get('/stok', [ControllerStok::class, 'index'])->middleware('permission:stock.view')->name('stok.index');
 

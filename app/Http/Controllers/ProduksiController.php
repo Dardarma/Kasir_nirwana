@@ -114,7 +114,7 @@ class ProduksiController extends Controller
 
      public function list(Request $request)
     {
-        $search = $request->input('search', '');
+        $search = $request->input('table_search', '');
         $paginate = $request->input('paginate', 10);
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -129,7 +129,8 @@ class ProduksiController extends Controller
             ->when($tanggalDari && $tanggalSampai, function ($query) use ($tanggalDari, $tanggalSampai) {
                 return $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
             })
-            ->paginate($paginate);
+            ->paginate($paginate)
+            ->withQueryString();
 
         return view('produksi.history', compact('transaksi'));
     }

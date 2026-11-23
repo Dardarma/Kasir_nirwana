@@ -182,6 +182,7 @@
                                     ['pemakaian.view', 'Pemakaian', route('pemakaian.index'), 'pemakaian*'],
                                     ['produksi.view', 'Produksi', url('/produksi'), 'produksi*'],
                                     ['stock.view', 'Stok', route('stok.index'), 'stok'],
+                                    ['laba-rugi.view', 'Laba Rugi', route('stok.laba_rugi'), 'laba-rugi'],
                                 ]],
                             ];
                             $homeLabel = $user->hasPermission('dashboard.view') ? 'Dashboard' : 'Beranda';
@@ -220,15 +221,6 @@
                             @endif
                         @endforeach
 
-                        @if ($user->hasPermission('laba-rugi.view'))
-                            <li class="nav-item">
-                                <a href="{{ route('stok.laba_rugi') }}"
-                                    class="nav-link {{ request()->routeIs('stok.laba_rugi') ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-chart-line"></i>
-                                    <p>Laba Rugi</p>
-                                </a>
-                            </li>
-                        @endif
                     </ul>
                 </nav>
             </div>
