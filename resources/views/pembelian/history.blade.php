@@ -11,7 +11,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
-                        <form method="GET" action="{{ url('/pembelian/list') }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="{{ url('/pembelian/list', [], false) }}" class="d-flex align-items-center gap-2">
                             <!-- Show entries -->
                             <div class="input-group input-group-sm" style="width: 80px;">
                                 <select class="custom-select" name="paginate" onchange="this.form.submit()">
@@ -43,7 +43,7 @@
 
                         <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
-                        <a href="{{ url('/pembelian') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url('/pembelian', [], false) }}" class="btn btn-primary btn-sm">
                             Transaksi Baru
                         </a>
                     </div>
@@ -124,13 +124,12 @@
             $('.btn-detail').on('click', function() {
                 var id = $(this).data('id');
 
-                console.log('Button clicked, ID:', id); // Debug
 
                 // Set transaksi ID ke button update pembayaran
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '{{ url("/pembelian") }}/' + id + '/detail',
+                    url: '{{ url("/pembelian", [], false) }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html(
@@ -140,7 +139,6 @@
                             .text('Memuat...');
                     },
                     success: function(response) {
-                        console.log('Response received:', response); // Debug
 
                         // Kosongkan tbody
                         $('#detail-items').empty();
@@ -185,9 +183,6 @@
                             $('#detail-metode-pembayaran').text(response.transaksi.metode_pembayaran || '-');
 
                             // Debug: log semua data transaksi
-                            console.log('Full transaksi data:', response.transaksi);
-                            console.log('Customer Bayar value:', response.transaksi
-                                .customer_bayar);
 
                             // Populate customer bayar input
                             $('#detail-customer-bayar-input').val(response.transaksi
@@ -206,8 +201,6 @@
                                     'Update Pembayaran');
 
                             // Debug: cek apakah input berhasil diisi
-                            console.log('Input value after populate:', $(
-                                '#detail-customer-bayar-input').val());
                         } else {
                             $('#detail-items').html(
                                 '<tr><td colspan="6" class="text-center">Tidak ada data detail</td></tr>'
@@ -217,8 +210,6 @@
                     error: function(xhr, status, error) {
                         $('#btn-update-bayar').prop('disabled', true).data('locked', true)
                             .text('Update Pembayaran');
-                        console.error('AJAX Error:', error); // Debug
-                        console.error('Response:', xhr.responseText); // Debug
                         $('#detail-items').html(
                             '<tr><td colspan="6" class="text-center text-danger">Gagal mengambil data detail: ' +
                             escapeHtmlText(error) + '</td></tr>');
@@ -251,7 +242,7 @@
                 }
 
                 $.ajax({
-                    url: '{{ url("/pembelian/edit") }}/' + transaksiId,
+                    url: '{{ url("/pembelian/edit", [], false) }}/' + transaksiId,
                     type: 'PUT',
                     data: {
                         customer_bayar: customerBayar,
@@ -266,7 +257,6 @@
                         location.reload(); // Reload halaman untuk refresh data
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText);
                         alert('Gagal update pembayaran: ' + (xhr.responseJSON?.message ||
                             error));
                     },

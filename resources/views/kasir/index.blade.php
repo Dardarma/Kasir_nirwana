@@ -153,7 +153,7 @@
             <div class="" style="margin-top: 40px">
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah" onclick="tambahItem()">Tambah</button>
-                    <a href="{{url('/kasir/list')}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <a href="{{url('/kasir/list', [], false)}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
                     <div class="btn-group" role="group" aria-label="Aksi transaksi">
                         <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                         <button type="button" class="btn btn-success mx-2" id="btn-simpan-cetak">Simpan dan Cetak</button>
@@ -274,7 +274,7 @@
             stokInfo.className = 'text-muted';
             updateSubTotal();
             $.ajax({
-                url: `{{ url('/kasir/stok-realtime') }}/${subBarangId}`,
+                url: `{{ url('/kasir/stok-realtime', [], false) }}/${subBarangId}`,
                 type: 'GET',
                 success: function(response) {
                     if (select.selectedOptions[0] !== selectedOption) return;
@@ -470,8 +470,6 @@
                 
                 // Update kembalian dan status pembayaran setelah grand total berubah
                 hitungKembalian();
-            } else {
-                console.error('Element grand-total tidak ditemukan'); // Debug
             }
         }
 
@@ -571,7 +569,7 @@
                 var barangId = $(this).val();
                 if (barangId) {
                     $.ajax({
-                        url: `{{ url('/kasir/stok-realtime') }}/${barangId}`,
+                        url: `{{ url('/kasir/stok-realtime', [], false) }}/${barangId}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.status === 'success') {
@@ -580,7 +578,6 @@
                             }
                         },
                         error: function() {
-                            console.log(`Failed to refresh stok for barang ID: ${barangId}`);
                         }
                     });
                 }
@@ -720,7 +717,7 @@
 
 
                 $.ajax({
-                    url: '{{ url("/kasir") }}',
+                    url: '{{ url("/kasir", [], false) }}',
                     type: 'POST',
                     dataType: 'json',
                     data: data,
@@ -738,7 +735,6 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText); // Debug
                         let errorMessage = 'Gagal menyimpan data';
 
                         if (xhr.responseJSON && xhr.responseJSON.message) {

@@ -11,7 +11,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
-                        <form method="GET" action="{{ url('/kasir/list') }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="{{ url('/kasir/list', [], false) }}" class="d-flex align-items-center gap-2">
 
                             <!-- Show entries -->
                             <div class="input-group input-group-sm mx-1" style="width: 80px;">
@@ -46,7 +46,7 @@
 
                         <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
-                        <a href="{{ url('/kasir') }}" class="btn btn-primary btn-sm mx-1">
+                        <a href="{{ url('/kasir', [], false) }}" class="btn btn-primary btn-sm mx-1">
                             Transaksi Baru
                         </a>
                     </div>
@@ -129,13 +129,12 @@
             $('.btn-detail').on('click', function() {
                 var id = $(this).data('id');
 
-                console.log('Button clicked, ID:', id); // Debug
 
                 // Set transaksi ID ke button update pembayaran
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '{{ url("/kasir") }}/' + id + '/detail',
+                    url: '{{ url("/kasir", [], false) }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html(
@@ -145,7 +144,6 @@
                             .text('Memuat...');
                     },
                     success: function(response) {
-                        console.log('Response received:', response); // Debug
 
                         // Kosongkan tbody
                         $('#detail-items').empty();
@@ -190,9 +188,6 @@
                                 response.transaksi.metode_pembayaran || '-');
 
                             // Debug: log semua data transaksi
-                            console.log('Full transaksi data:', response.transaksi);
-                            console.log('Customer Bayar value:', response.transaksi
-                                .customer_bayar);
 
                             // Populate customer bayar input
                             $('#detail-customer-bayar-input').val(response.transaksi
@@ -219,8 +214,6 @@
                     error: function(xhr, status, error) {
                         $('#btn-update-bayar').prop('disabled', true).data('locked', true)
                             .text('Update Pembayaran');
-                        console.error('AJAX Error:', error); // Debug
-                        console.error('Response:', xhr.responseText); // Debug
                         $('#detail-items').html(
                             '<tr><td colspan="6" class="text-center text-danger">Gagal mengambil data detail: ' +
                             escapeHtmlText(error) + '</td></tr>');
@@ -253,7 +246,7 @@
                 }
 
                 $.ajax({
-                    url: '{{ url("/kasir/edit") }}/' + transaksiId,
+                    url: '{{ url("/kasir/edit", [], false) }}/' + transaksiId,
                     type: 'PUT',
                     data: {
                         customer_bayar: customerBayar,
@@ -268,7 +261,6 @@
                         location.reload(); // Reload halaman untuk refresh data
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText);
                         alert('Gagal update pembayaran: ' + (xhr.responseJSON?.message ||
                             error));
                     },

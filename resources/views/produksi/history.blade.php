@@ -11,7 +11,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
-                        <form method="GET" action="{{ url('/produksi/list') }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="{{ url('/produksi/list', [], false) }}" class="d-flex align-items-center gap-2">
                             <!-- Show entries -->
                             <div class="input-group input-group-sm" style="width: 80px;">
                                 <select class="custom-select" name="paginate" onchange="this.form.submit()">
@@ -43,7 +43,7 @@
                         
                         <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
-                        <a href="{{ url('/produksi') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ url('/produksi', [], false) }}" class="btn btn-primary btn-sm">
                             Transaksi Baru
                         </a>
                     </div>
@@ -113,19 +113,17 @@
             $('.btn-detail').on('click', function() {
                 var id = $(this).data('id');
                 
-                console.log('Button clicked, ID:', id); // Debug
                 
                 // Set transaksi ID ke button update pembayaran
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '{{ url("/produksi") }}/' + id + '/detail',
+                    url: '{{ url("/produksi", [], false) }}/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html('<tr><td colspan="6" class="text-center">Loading...</td></tr>');
                     },
                     success: function(response) {
-                        console.log('Response received:', response); // Debug
                         
                         // Kosongkan tbody
                         $('#detail-items').empty();
@@ -133,7 +131,6 @@
                         if (response.status === 'success' && response.data && response.data.length > 0) {
                             // Loop data detail
                             $.each(response.data, function(index, item) {
-                                console.log('Processing item:', item); // Debug setiap item
                                 
                                 $('#detail-items').append(`
                                     <tr>
@@ -150,18 +147,12 @@
                                 $('#detail-kode').text(response.transaksi.kode_transaksi || 'N/A');
                                 $('#detail-tanggal').text(response.transaksi.tanggal ? new Date(response.transaksi.tanggal).toLocaleDateString('id-ID') : 'N/A');
                                 
-                                console.log('Transaksi data populated');
                             }
                         } else {
-                            console.log('No data found or invalid response structure');
                             $('#detail-items').html('<tr><td colspan="4" class="text-center">Tidak ada data detail</td></tr>');
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('AJAX Error:', error); // Debug
-                        console.error('Status:', status); // Debug
-                        console.error('Response:', xhr.responseText); // Debug
-                        console.error('Status Code:', xhr.status); // Debug
                         $('#detail-items').html('<tr><td colspan="4" class="text-center text-danger">Gagal mengambil data detail: ' + escapeHtmlText(error) + '</td></tr>');
                     }
                 });

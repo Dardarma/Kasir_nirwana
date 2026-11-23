@@ -89,7 +89,7 @@
                                 onclick="tambahItem()">
                                 Tambah
                             </button>
-                            <a href="{{url('/pemakaian/list')}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
+                            <a href="{{url('/pemakaian/list', [], false)}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
                             <button type="button" class="btn btn-success" id="btn-simpan">
                                 Simpan
                             </button>
@@ -149,7 +149,7 @@
                 const pilihanMasihSama = () => barangId === document.getElementById('barang').value
                     && satuan === document.getElementById('satuan').value;
                 $.ajax({
-                    url: `{{ url('/pemakaian/stok-realtime') }}/${barangId}`,
+                    url: `{{ url('/pemakaian/stok-realtime', [], false) }}/${barangId}`,
                     type: 'GET',
                     data: { satuan },
                     success: function(response) {
@@ -274,7 +274,6 @@
                 // Update row numbers
                 updateRowNumbers();
 
-                console.log('Item removed, current list:', item_list); // Debug
             }
 
 
@@ -313,7 +312,6 @@
             // Function untuk hitung ulang total (jika ada perubahan manual)
             function recalculateTotal() {
                 // Function ini tidak diperlukan untuk pemakaian karena tidak ada total hitung
-                console.log('Recalculate total not needed for pemakaian'); // Debug
             }
 
             // Function untuk refresh semua data stok setelah transaksi
@@ -323,7 +321,7 @@
                     var barangId = $(this).val();
                     if (barangId) {
                         $.ajax({
-                            url: `{{ url('/pemakaian/stok-realtime') }}/${barangId}`,
+                            url: `{{ url('/pemakaian/stok-realtime', [], false) }}/${barangId}`,
                             type: 'GET',
                             success: function(response) {
                                 if (response.status === 'success') {
@@ -333,7 +331,6 @@
                                 }
                             },
                             error: function() {
-                                console.log(`Failed to refresh stok for barang ID: ${barangId}`);
                             }
                         });
                     }
@@ -358,14 +355,11 @@
                 // Refresh stok data setelah transaksi berhasil
                 refreshStokData();
 
-                console.log('Form reset complete with stok refresh'); // Debug
             }
 
             // Event listener untuk tombol tambah
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOM loaded'); // Debug
 
-                console.log('Initialization complete'); // Debug
             });
 
             // Handle Enter key untuk quick add
@@ -402,24 +396,21 @@
                         _token: $('meta[name="csrf-token"]').attr('content')
                     };
 
-                    console.log('Final data:', data); // Debug
 
                     $.ajax({
-                        url: '{{ url("/pemakaian") }}',
+                        url: '{{ url("/pemakaian", [], false) }}',
                         type: 'POST',
                         data: data,
                         beforeSend: function() {
                             $('#btn-simpan').prop('disabled', true).text('Menyimpan...');
                         },
                         success: function(response) {
-                            console.log('Response:', response); // Debug
                             alert('Data berhasil disimpan!');
 
                             // Reset form dan table
                             resetForm();
                         },
                         error: function(xhr, status, error) {
-                            console.error('Error:', xhr.responseText); // Debug
                             let errorMessage = 'Gagal menyimpan data';
 
                             if (xhr.responseJSON && xhr.responseJSON.message) {

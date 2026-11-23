@@ -87,7 +87,7 @@
             <div style="margin-top: 40px">
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah">Tambah</button>
-                    <a href="{{ url('/produksi/list') }}" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <a href="{{ url('/produksi/list', [], false) }}" class="btn btn-info" id="btn-laporan">Laporan</a>
                     <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
             </div>
@@ -110,7 +110,6 @@
 
         // Function untuk tambah item ke table
         function tambahItem() {
-            console.log('Tombol tambah diklik'); // Debug
 
             // Get form values
             var barangSelect = document.getElementById('barang');
@@ -119,7 +118,6 @@
 
             var jumlah = parseFloat(jumlahInput.value) || 0;
 
-            console.log('Barang:', barangSelect.value, 'Jumlah:', jumlah); // Debug
 
             // Validation
             if (!barangSelect.value) {
@@ -186,7 +184,6 @@
                 satuan: satuan,
             });
 
-            console.log('Item added to list:', item_list); // Debug
 
             // Increment counter
             itemCounter++;
@@ -211,7 +208,6 @@
             // Update row numbers
             updateRowNumbers();
             
-            console.log('Item removed, current list:', item_list); // Debug
         }
 
         // Function untuk update total stok
@@ -224,8 +220,6 @@
                     totals.set(unit, (totals.get(unit) ?? 0) + Number(row.dataset.jumlah));
                 });
                 totalElement.textContent = Array.from(totals, ([unit, quantity]) => formatJumlah(quantity) + ' ' + unit).join(' / ') || '0';
-            } else {
-                console.error('Element total tidak ditemukan'); // Debug
             }
         }
 
@@ -253,7 +247,6 @@
 
         // Event listener
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded'); // Debug
 
             // Reset total stok saat load
             updateTotalStok();
@@ -275,7 +268,6 @@
                 btnTambah.addEventListener('click', tambahItem);
             }
 
-            console.log('Initialization complete'); // Debug
         });
 
         // Handle Enter key untuk quick add
@@ -292,8 +284,6 @@
         //push Back End
         $(document).ready(function() {
             $('#btn-simpan').on('click', function() {
-                console.log('Tombol simpan diklik'); // Debug
-                console.log('Data yang akan dikirim:', item_list); // Debug
                 
                 // Validasi data
                 if (item_list.length === 0) {
@@ -313,24 +303,21 @@
                     _token: $('meta[name="csrf-token"]').attr('content')
                 };
 
-                console.log('Final data:', data); // Debug
 
                 $.ajax({
-                    url: '{{ url("/produksi") }}',
+                    url: '{{ url("/produksi", [], false) }}',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {
                         $('#btn-simpan').prop('disabled', true).text('Menyimpan...');
                     },
                     success: function(response) {
-                        console.log('Response:', response); // Debug
                         alert('Data berhasil disimpan!');
                         
                         // Reset form dan table
                         resetForm();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText); // Debug
                         let errorMessage = 'Gagal menyimpan data';
                         
                         if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -365,7 +352,6 @@
             // Clear form input
             clearForm();
             
-            console.log('Form reset complete'); // Debug
         }
     </script>
 

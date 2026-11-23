@@ -155,7 +155,7 @@
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah"
                         onclick="tambahItem()">Tambah</button>
-                    <a href="{{ url('/pembelian/list') }}" type="button" class="btn btn-info"
+                    <a href="{{ url('/pembelian/list', [], false) }}" type="button" class="btn btn-info"
                         id="btn-laporan">Laporan</a>
                     <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
@@ -257,7 +257,6 @@
             var selectedOption = barangSelect.options[barangSelect.selectedIndex];
             var namaBarang = selectedOption.text;
             var barangId = barangSelect.value;
-            console.log('Nama:', namaBarang, 'Harga:', harga); // Debug
 
             // Calculate subtotal
             var subTotal = jumlah * harga;
@@ -326,7 +325,6 @@
             // Update row numbers
             updateRowNumbers();
 
-            console.log('Item removed, current list:', item_list); // Debug
         }
 
         // Function untuk update grand total
@@ -334,12 +332,9 @@
             var grandTotalElement = document.getElementById('grand-total');
             if (grandTotalElement) {
                 grandTotalElement.innerHTML = `Rp ${formatRupiah(grandTotal)}`;
-                console.log('Grand total updated:', grandTotal); // Debug
 
                 // Update kembalian dan status pembayaran setelah grand total berubah
                 hitungKembalian();
-            } else {
-                console.error('Element grand-total tidak ditemukan'); // Debug
             }
         }
 
@@ -375,8 +370,6 @@
             customerBayarHidden.value = customerBayarValue;
             customerBayarDisplay.value = `Rp ${formatRupiah(customerBayarValue)}`;
 
-            console.log('Calculation - Bayar:', bayar, 'Grand Total:', grandTotal, 'Kembalian:', kembalian,
-                'Customer Bayar:', customerBayarValue); // Debug
         }
 
         // Function untuk update nomor urut
@@ -443,18 +436,15 @@
             // Clear form input
             clearForm();
 
-            console.log('Form reset complete'); // Debug
         }
 
         // Function untuk refresh stok data (placeholder)
         function refreshStokData() {
             // Placeholder function untuk refresh stok data setelah transaksi
-            console.log('Refreshing stok data...');
         }
 
         // Event listener untuk tombol tambah
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded'); // Debug
 
             // Reset grand total saat load
             grandTotal = 0;
@@ -480,7 +470,6 @@
                 bayarInput.addEventListener('change', hitungKembalian);
             }
 
-            console.log('Initialization complete'); // Debug
         });
 
         // Handle Enter key untuk quick add
@@ -543,24 +532,21 @@
                     _token: $('meta[name="csrf-token"]').attr('content')
                 };
 
-                console.log('Final data:', data); // Debug
 
                 $.ajax({
-                    url: '{{ url("/pembelian") }}',
+                    url: '{{ url("/pembelian", [], false) }}',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {
                         $('#btn-simpan').prop('disabled', true).text('Menyimpan...');
                     },
                     success: function(response) {
-                        console.log('Response:', response); // Debug
                         alert('Data berhasil disimpan!');
 
                         // Reset form dan table
                         resetForm();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText); // Debug
                         let errorMessage = 'Gagal menyimpan data';
 
                         if (xhr.responseJSON && xhr.responseJSON.message) {
