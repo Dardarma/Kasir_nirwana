@@ -155,7 +155,7 @@
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah"
                         onclick="tambahItem()">Tambah</button>
-                    <a href="{{ url('/pembelian/list', [], false) }}" type="button" class="btn btn-info"
+                    <a href="/pembelian/list" type="button" class="btn btn-info"
                         id="btn-laporan">Laporan</a>
                     <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
@@ -534,7 +534,7 @@
 
 
                 $.ajax({
-                    url: '{{ url("/pembelian", [], false) }}',
+                    url: '/pembelian',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {

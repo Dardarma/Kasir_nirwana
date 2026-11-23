@@ -89,7 +89,7 @@
                                 onclick="tambahItem()">
                                 Tambah
                             </button>
-                            <a href="{{url('/pemakaian/list', [], false)}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
+                            <a href="/pemakaian/list" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
                             <button type="button" class="btn btn-success" id="btn-simpan">
                                 Simpan
                             </button>
@@ -149,7 +149,7 @@
                 const pilihanMasihSama = () => barangId === document.getElementById('barang').value
                     && satuan === document.getElementById('satuan').value;
                 $.ajax({
-                    url: `{{ url('/pemakaian/stok-realtime', [], false) }}/${barangId}`,
+                    url: `/pemakaian/stok-realtime/${barangId}`,
                     type: 'GET',
                     data: { satuan },
                     success: function(response) {
@@ -321,7 +321,7 @@
                     var barangId = $(this).val();
                     if (barangId) {
                         $.ajax({
-                            url: `{{ url('/pemakaian/stok-realtime', [], false) }}/${barangId}`,
+                            url: `/pemakaian/stok-realtime/${barangId}`,
                             type: 'GET',
                             success: function(response) {
                                 if (response.status === 'success') {
@@ -398,7 +398,7 @@
 
 
                     $.ajax({
-                        url: '{{ url("/pemakaian", [], false) }}',
+                        url: '/pemakaian',
                         type: 'POST',
                         data: data,
                         beforeSend: function() {

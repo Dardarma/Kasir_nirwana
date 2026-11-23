@@ -87,7 +87,7 @@
             <div style="margin-top: 40px">
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah">Tambah</button>
-                    <a href="{{ url('/produksi/list', [], false) }}" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <a href="/produksi/list" class="btn btn-info" id="btn-laporan">Laporan</a>
                     <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                 </div>
             </div>
@@ -305,7 +305,7 @@
 
 
                 $.ajax({
-                    url: '{{ url("/produksi", [], false) }}',
+                    url: '/produksi',
                     type: 'POST',
                     data: data,
                     beforeSend: function() {

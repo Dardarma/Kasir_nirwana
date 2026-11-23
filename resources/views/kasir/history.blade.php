@@ -11,7 +11,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
-                        <form method="GET" action="{{ url('/kasir/list', [], false) }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="/kasir/list" class="d-flex align-items-center gap-2">
 
                             <!-- Show entries -->
                             <div class="input-group input-group-sm mx-1" style="width: 80px;">
@@ -46,7 +46,7 @@
 
                         <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
-                        <a href="{{ url('/kasir', [], false) }}" class="btn btn-primary btn-sm mx-1">
+                        <a href="/kasir" class="btn btn-primary btn-sm mx-1">
                             Transaksi Baru
                         </a>
                     </div>
@@ -134,7 +134,7 @@
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '{{ url("/kasir", [], false) }}/' + id + '/detail',
+                    url: '/kasir/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html(
@@ -246,7 +246,7 @@
                 }
 
                 $.ajax({
-                    url: '{{ url("/kasir/edit", [], false) }}/' + transaksiId,
+                    url: '/kasir/edit/' + transaksiId,
                     type: 'PUT',
                     data: {
                         customer_bayar: customerBayar,

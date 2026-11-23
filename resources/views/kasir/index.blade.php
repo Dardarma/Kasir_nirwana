@@ -153,7 +153,7 @@
             <div class="" style="margin-top: 40px">
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-primary" id="btn-tambah" onclick="tambahItem()">Tambah</button>
-                    <a href="{{url('/kasir/list', [], false)}}" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
+                    <a href="/kasir/list" type="button" class="btn btn-info" id="btn-laporan">Laporan</a>
                     <div class="btn-group" role="group" aria-label="Aksi transaksi">
                         <button type="button" class="btn btn-success" id="btn-simpan">Simpan</button>
                         <button type="button" class="btn btn-success mx-2" id="btn-simpan-cetak">Simpan dan Cetak</button>
@@ -195,7 +195,7 @@
 
             // AJAX call untuk get barang berdasarkan customer
             $.ajax({
-                url: `{{ url('/kasir/barang-by-customer', [], false) }}/${customerId}`,
+                url: `/kasir/barang-by-customer/${customerId}`,
                 type: 'GET',
                 success: function(response) {
                     if (response.status === 'success' && response.data.length > 0) {
@@ -274,7 +274,7 @@
             stokInfo.className = 'text-muted';
             updateSubTotal();
             $.ajax({
-                url: `{{ url('/kasir/stok-realtime', [], false) }}/${subBarangId}`,
+                url: `/kasir/stok-realtime/${subBarangId}`,
                 type: 'GET',
                 success: function(response) {
                     if (select.selectedOptions[0] !== selectedOption) return;
@@ -569,7 +569,7 @@
                 var barangId = $(this).val();
                 if (barangId) {
                     $.ajax({
-                        url: `{{ url('/kasir/stok-realtime', [], false) }}/${barangId}`,
+                        url: `/kasir/stok-realtime/${barangId}`,
                         type: 'GET',
                         success: function(response) {
                             if (response.status === 'success') {
@@ -717,7 +717,7 @@
 
 
                 $.ajax({
-                    url: '{{ url("/kasir", [], false) }}',
+                    url: '/kasir',
                     type: 'POST',
                     dataType: 'json',
                     data: data,
@@ -731,7 +731,7 @@
                         // Reset form dan table
                         resetForm();
                         if (cetakNota && response.transaksi_id) {
-                            window.location.href = `{{ url('/kasir', [], false) }}/${response.transaksi_id}/nota`;
+                            window.location.href = `/kasir/${response.transaksi_id}/nota`;
                         }
                     },
                     error: function(xhr, status, error) {

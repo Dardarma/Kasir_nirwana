@@ -11,7 +11,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
                         <!-- Form Search & Pagination -->
-                        <form method="GET" action="{{ url('/produksi/list', [], false) }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="/produksi/list" class="d-flex align-items-center gap-2">
                             <!-- Show entries -->
                             <div class="input-group input-group-sm" style="width: 80px;">
                                 <select class="custom-select" name="paginate" onchange="this.form.submit()">
@@ -43,7 +43,7 @@
                         
                         <button type="button" class="btn btn-danger btn-sm mx-1" data-toggle="modal" data-target="#modal-laporan-pdf"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
                         <!-- Add Button -->
-                        <a href="{{ url('/produksi', [], false) }}" class="btn btn-primary btn-sm">
+                        <a href="/produksi" class="btn btn-primary btn-sm">
                             Transaksi Baru
                         </a>
                     </div>
@@ -118,7 +118,7 @@
                 $('#btn-update-bayar').data('transaksi-id', id);
 
                 $.ajax({
-                    url: '{{ url("/produksi", [], false) }}/' + id + '/detail',
+                    url: '/produksi/' + id + '/detail',
                     type: 'GET',
                     beforeSend: function() {
                         $('#detail-items').html('<tr><td colspan="6" class="text-center">Loading...</td></tr>');
