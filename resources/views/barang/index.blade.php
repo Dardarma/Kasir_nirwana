@@ -26,7 +26,7 @@
                                         <select class="custom-select" name="Kategori" onchange="this.form.submit()">
                                             <option value="semua" {{ request('Kategori') == 'semua' ? 'selected' : '' }}>Semua</option>
                                             <option value="produksi" {{ request('Kategori') == 'produksi' ? 'selected' : '' }}>Produksi</option>
-                                            <option value="jadi" {{ request('Kategori') == 'jadi' ? 'selected' : '' }}>Jadi</option>
+                                            <option value="jadi" {{ request('Kategori') == 'jadi' ? 'selected' : '' }}>Produk Jadi</option>
                                         </select>
                                     </div>
 
@@ -75,7 +75,7 @@
                                     <td style="white-space: nowrap;">{{ $barang->firstItem() + $key }}</td>
                                     <td style="white-space: nowrap;">{{ $item->nama_barang }}</td>
                                     <td style="white-space: nowrap;">{{ $item->satuan }}</td>
-                                    <td style="white-space: nowrap;" >{{ $item->kategori }}</td>
+                                    <td style="white-space: nowrap;" >{{ ['produksi' => 'Produksi', 'jadi' => 'Produk Jadi'][$item->kategori] ?? $item->kategori }}</td>
                                     <td style="white-space: nowrap;">{{ $item->sub_kategori === 'non_stok' ? 'Nonstok' : $item->sub_kategori }}</td>
                                     <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
                                         {{ (float) $item->harga == 0 ? '-' : 'Rp ' . number_format($item->harga, 0, ',', '.') }}
@@ -86,7 +86,7 @@
                                          data-toggle="modal" 
                                          data-target="#edit"
                                          data-id = "{{ $item->id }}"
-                                         data-update-url="{{ route('Barang_update', $item->id) }}"
+                                         data-update-url="{{ route('Barang_update', $item->id, false) }}"
                                          data-nama_barang  ="{{ $item->nama_barang }}"
                                          data-satuan = "{{ $item->satuan }}"
                                          data-kategori = "{{ $item->kategori }}"

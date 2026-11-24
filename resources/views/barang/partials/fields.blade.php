@@ -7,7 +7,7 @@
                         <select class="form-control" id="{{ $modal }}_kategori" name="kategori" required>
                             <option value="">-- Pilih Kategori --</option>
                             <option value="produksi">Produksi</option>
-                            <option value="jadi">Jadi</option>
+                            <option value="jadi">Produk Jadi</option>
                         </select>
                     </div>
                     <div class="form-group">

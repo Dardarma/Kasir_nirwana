@@ -65,6 +65,7 @@ class ControllerStok extends Controller
             ->selectRaw('SUM(CASE WHEN jenis_transaksi = "penjualan" THEN total_bayar ELSE 0 END) - SUM(CASE WHEN jenis_transaksi = "penjualan" THEN customer_bayar ELSE 0 END) as piutang')
             ->selectRaw('SUM(CASE WHEN jenis_transaksi = "pembelian" THEN total_bayar ELSE 0 END) - SUM(CASE WHEN jenis_transaksi = "pembelian" THEN customer_bayar ELSE 0 END) as hutang')
             ->selectRaw('SUM(CASE WHEN jenis_transaksi = "penjualan" THEN total_bayar ELSE 0 END) - SUM(CASE WHEN jenis_transaksi = "pembelian" THEN total_bayar ELSE 0 END) as laba_rugi')
+            ->where('status', 'aktif')
             ->where('tanggal', 'like', $month . '%')
             ->groupBy(DB::raw('DATE(tanggal)'))
             ->orderBy(DB::raw('DATE(tanggal)'), 'desc')
