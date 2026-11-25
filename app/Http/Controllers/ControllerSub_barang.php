@@ -67,10 +67,10 @@ class ControllerSub_barang extends Controller
                 'status' => 'aktif'
             ] + $attributes);
 
-            return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil ditambahkan');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('success', 'Sub barang berhasil ditambahkan');
         } catch (\Exception $e) {
             report($e);
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal menambahkan sub barang');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('error', 'Gagal menambahkan sub barang');
         }
     }
 
@@ -95,23 +95,23 @@ class ControllerSub_barang extends Controller
                 'satuan' => $request->satuan,
             ] + $attributes);
 
-            return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil diupdate');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('success', 'Sub barang berhasil diupdate');
         } catch (\Exception $e) {
             report($e);
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal mengupdate sub barang');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('error', 'Gagal mengupdate sub barang');
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $subBarang = sub_barang::findOrFail($id);
             $subBarang->update(['status' => 'nonaktif']);
 
-            return redirect()->route('sub_barang.index')->with('success', 'Sub barang berhasil dihapus');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('success', 'Sub barang berhasil dihapus');
         } catch (\Exception $e) {
             report($e);
-            return redirect()->route('sub_barang.index')->with('error', 'Gagal menghapus sub barang');
+            return redirect()->to(route('sub_barang.index', $request->query->all(), false))->with('error', 'Gagal menghapus sub barang');
         }
     }
 

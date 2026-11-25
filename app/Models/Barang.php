@@ -12,6 +12,15 @@ class Barang extends Model
 
     public const NON_STOK = 'non_stok';
 
+    protected static function booted(): void
+    {
+        static::updated(function (Barang $barang): void {
+            if ($barang->wasChanged('status') && $barang->status === 'nonaktif') {
+                $barang->sub_barang()->where('status', 'aktif')->update(['status' => 'nonaktif']);
+            }
+        });
+    }
+
     public function isNonStok(): bool
     {
         return $this->sub_kategori === self::NON_STOK;

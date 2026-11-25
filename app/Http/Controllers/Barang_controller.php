@@ -105,9 +105,10 @@ class Barang_controller extends Controller
     public function destroy($id)
     {
         try{
-            $barang = Barang::findOrFail($id);
-            $barang->status = 'nonaktif';
-            $barang->save();
+            DB::transaction(function () use ($id) {
+                $barang = Barang::lockForUpdate()->findOrFail($id);
+                $barang->update(['status' => 'nonaktif']);
+            });
             return redirect('/barang')->with('success', 'Barang berhasil dihapus.');
         } catch (\Exception $e) {
             Log::error('Error deleting barang:', ['error' => $e->getMessage()]);

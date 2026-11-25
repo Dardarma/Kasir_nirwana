@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\Satuan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,11 +44,9 @@ class ControllerStok extends Controller
             ->paginate($paginate)
             ->withQueryString();
 
-        $satuanStok = \App\Models\Satuan::with('parent')->get()->mapWithKeys(
-            fn ($unit) => [$unit->nama => $unit->parent?->nama ?? $unit->nama]
-        );
+        $konversiStok = Satuan::konversiStok();
 
-        return view('stok.index', compact('stok', 'satuanStok'));
+        return view('stok.index', compact('stok', 'konversiStok'));
     }
 
     public function getLabaRugi(Request $request)

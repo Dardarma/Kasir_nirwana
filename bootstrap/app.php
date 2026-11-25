@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\PreventSearchIndexing;
+use App\Http\Middleware\PreserveListQuery;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(PreventSearchIndexing::class);
-        $middleware->web(append: [EnsureAccountIsActive::class]);
+        $middleware->web(append: [EnsureAccountIsActive::class, PreserveListQuery::class]);
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
         ]);

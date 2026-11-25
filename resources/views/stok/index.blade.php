@@ -58,6 +58,7 @@
                                     <th style="min-width: 80px; white-space: nowrap;">Kategori</th>
                                     <th style="min-width: 100px; white-space: nowrap;">Sub Kategori</th>
                                     <th style="min-width: 80px; white-space: nowrap;">Stok</th>
+                                    <th style="min-width: 120px; white-space: nowrap;">Satuan</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -67,14 +68,29 @@
                                 </tr>
                             @endif
                             @foreach ($stok as $key => $item)
+                                @php
+                                    $satuanDasar = $konversiStok[$item->satuan]['dasar'] ?? $item->satuan;
+                                    $pilihanSatuan = array_filter($konversiStok, fn ($unit) => $unit['dasar'] === $satuanDasar && $unit['faktor'] > 0);
+                                @endphp
                                 <tr>
                                     <td style="white-space: nowrap;">{{ $key + 1 }}</td>
                                     <td style="white-space: nowrap;">{{ $item->nama_barang }}</td>
                                     <td style="white-space: nowrap;">{{ ucfirst($item->kategori) }}</td>
                                     <td style="white-space: nowrap;">{{ str_replace('_', ' ', ucfirst($item->sub_kategori)) }}</td>
                                     <td style="white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ format_jumlah($item->stok) }}
-                                        {{ $satuanStok[$item->satuan] ?? $item->satuan }}
+                                        <span data-stok-jumlah>{{ format_jumlah($item->stok) }}</span>
+                                    </td>
+                                    <td>
+                                        <select class="custom-select custom-select-sm stok-satuan"
+                                            aria-label="Satuan stok {{ $item->nama_barang }}"
+                                            data-stok="{{ $item->stok }}">
+                                            @forelse ($pilihanSatuan as $nama => $unit)
+                                                <option value="{{ $nama }}" data-faktor="{{ $unit['faktor'] }}"
+                                                    @selected($nama === $satuanDasar)>{{ $nama }}</option>
+                                            @empty
+                                                <option value="{{ $satuanDasar }}" data-faktor="1">{{ $satuanDasar }}</option>
+                                            @endforelse
+                                        </select>
                                     </td>
                                 </tr>
                             @endforeach
@@ -94,4 +110,15 @@
                 </div>
             </div>
 
+@endsection
+@section('script')
+    <script>
+        document.querySelectorAll('.stok-satuan').forEach(select => {
+            select.addEventListener('change', function () {
+                const faktor = Number(this.selectedOptions[0].dataset.faktor);
+                this.closest('tr').querySelector('[data-stok-jumlah]').textContent =
+                    formatJumlah(Number(this.dataset.stok) / faktor);
+            });
+        });
+    </script>
 @endsection
